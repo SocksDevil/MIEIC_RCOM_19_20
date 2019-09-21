@@ -1,3 +1,9 @@
+# All binary files must be ignored
+*
+!*.*
+!*/
+!Makefile
+
 # Prerequisites
 *.d
 
@@ -50,3 +56,10 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+.vscode/
+
+*.pdf
+*.txt
+vgcore.*
