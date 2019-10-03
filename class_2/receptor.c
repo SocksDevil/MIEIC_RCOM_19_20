@@ -20,9 +20,11 @@
 #define C_SET 0x03
 #define C_UA 0x07
 
-
-
-volatile int STOP = FALSE;
+#define STATE_FLAG_I 0
+#define STATE_A 1
+#define STATE_C 2
+#define STATE_BCC 3
+#define STATE_FLAG_E 4
 
 int main(int argc, char **argv) {
   int fd, c, res;
@@ -68,64 +70,69 @@ int main(int argc, char **argv) {
   unsigned char received_set[5];
 
   int state = 0;
-  bool success = false, error = false;
-  while(!success && !error){
+  bool success = false;
+  while(!success ){
     read(fd, &received_set[state], 1);
     switch(state){
-      case 0:
+      case STATE_FLAG_I:
         if(received_set[state] == FLAG)
           state++;
-        else 
-          error = true;  
+         
 
         break;
-      case 1:
+      case STATE_A:
 
         if(received_set[state] == A)
           state++;
         else 
-          error = true;  
+          if(received_set[state] != FLAG)
+            state = 0; 
         
 
         break;
 
-      case 2:
+      case STATE_C:
         if(received_set[state]== C_SET)
           state++;
         else 
-          error = true;  
+          if(received_set[state]== FLAG)
+            state = 1;
+          else
+            state = 0;
         break;
 
-      case 3:
-        if(received_set[state]== (FLAG ^A) )
+      case STATE_BCC:
+        if(received_set[state]== (C_SET ^A) )
           state++;
         else 
-          error = true;  
+          state = 0; 
         break;
-      case 4:
+      case STATE_FLAG_E:
         if(received_set[state] == FLAG){
           success = true;
           state++;
         }
         else 
-          error = true;  
+          state = STATE_FLAG_I;
 
     }
-    
 
+    printf("Current state: %d\n", state);
   }
 
 
 
-  unsigned char sending_set[5];
-  sending_set[0] = FLAG;
-  sending_set[4] = FLAG;
-  sending_set[1] = A;
-  sending_set[2] = C_UA;
-  sending_set[3] = sending_set[1] ^ sending_set[2];
 
 
   if(success){
+    unsigned char sending_set[5];
+    sending_set[0] = FLAG;
+    sending_set[4] = FLAG;
+    sending_set[1] = A;
+    sending_set[2] = C_UA;
+    sending_set[3] = sending_set[1] ^ sending_set[2];
+    
+    printf("Success, sending message\n");
     write(fd,sending_set,5);
 
   }
