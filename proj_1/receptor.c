@@ -10,26 +10,12 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#define BAUDRATE B38400
-#define _POSIX_SOURCE 1 /* POSIX compliant source */
-#define FALSE 0
-#define TRUE 1
+#include "constants.h"
 
-#define FLAG 0x7E
-#define A 0x03
-#define C_SET 0x03
-#define C_UA 0x07
-
-#define STATE_FLAG_I 0
-#define STATE_A 1
-#define STATE_C 2
-#define STATE_BCC 3
-#define STATE_FLAG_E 4
 
 int main(int argc, char **argv) {
-  int fd, c, res;
+  int fd;
   struct termios oldtio, newtio;
-  char buf[1];
 
   if ((argc < 2) ||
       ((strcmp("/dev/ttyS0", argv[1]) != 0) &&
