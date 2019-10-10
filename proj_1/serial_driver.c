@@ -7,6 +7,8 @@
 #include <strings.h>
 #include <termios.h>
 #include <unistd.h>
+#include "llinterpretation.h"
+
 static struct termios oldtio;
 static int send_cnt = 0;
 static int fd;
@@ -96,11 +98,16 @@ int close_connection(int fd) {
 
 void update_bcc_state(frame_t * frame) {
   if(check_protection_field(frame)){
-    if(is_info_frame(frame))
+    if(is_info_frame(frame)){
       frame->current_state = STATE_DATA;
-    else if(is_non_info_frame(frame->received_frame[frame->current_frame]))
+      return;
+    }
+    else if(is_non_info_frame(frame->received_frame[frame->current_frame])){
       frame->current_state = STATE_FLAG_E;
+      return;
+    }
   }
+  frame->current_state = STATE_ERROR;
 }
 
 void update_state(
@@ -154,14 +161,16 @@ void set_connection(link_layer layer) {
   (void) signal(SIGALRM, send_frame);
   send_frame();
   alarm(timeout);
-  char received_frame[5];
+  unsigned char received_frame[5];
   frame_t frame = {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
     .received_frame = received_frame,
     .control_field = C_UA};
   for (;
-       frame.current_frame < MAX_SIZE && frame.current_state != STATE_END;
+       frame.current_frame < MAX_SIZE
+       && frame.current_state != STATE_END
+       && frame.current_state != STATE_ERROR;
        frame.current_frame++) {
     read(fd, &received_frame[frame.current_frame], 1);
     alarm(0);
@@ -171,14 +180,16 @@ void set_connection(link_layer layer) {
 
 void acknowledge_connection() {
 
-  char received_frame[5];
+  unsigned char received_frame[5];
   frame_t frame = {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
     .received_frame = received_frame,
     .control_field = C_UA};
   for (;
-       frame.current_frame < MAX_SIZE && frame.current_state != STATE_END;
+       frame.current_frame < MAX_SIZE
+       && frame.current_state != STATE_END
+       && frame.current_state != STATE_ERROR;
        frame.current_frame++) {
     read(fd, &received_frame[frame.current_frame], 1);
     update_state(&frame);
@@ -195,26 +206,44 @@ void acknowledge_connection() {
   write(fd, sending_set, 5);
 }
 
-void read_data(int fd, int sequence_number, char * buffer) {
-  frame_t frame = {
-    .current_state = STATE_FLAG_I,
-    .current_frame = 0,
-    .received_frame = buffer,
-    .control_field = sequence_number == 0 ? C_RI_0 : C_RI_1,
-  };
-
-  for (;
-       frame.current_frame < MAX_SIZE && frame.current_state != STATE_END;
-       frame.current_frame++) {
-    read(fd, &frame.received_frame[frame.current_frame], 1);
-    update_state(&frame);
-  }
+void send_non_info_frame(unsigned char control_field){
   char sending_ack[5];
   sending_ack[0] = FLAG;
   sending_ack[4] = FLAG;
   sending_ack[1] = A;
-  sending_ack[2] = sequence_number == 0 ? C_RR_0 : C_RR_1;
+  sending_ack[2] = control_field;
   sending_ack[3] = sending_ack[1] ^ sending_ack[2];
 
   write(fd, sending_ack, 5);
+}
+
+int read_data(int fd, int sequence_number, char * buffer) {
+  unsigned char received_frame[MAX_SIZE];
+
+  frame_t frame = {
+    .current_state = STATE_FLAG_I,
+    .current_frame = 0,
+    .received_frame = received_frame,
+    .control_field = sequence_number == 0 ? C_RI_0 : C_RI_1,
+  };
+
+  for (;
+       frame.current_frame < MAX_SIZE
+       && frame.current_state != STATE_END
+       && frame.current_state != STATE_ERROR;
+       frame.current_frame++) {
+    read(fd, &frame.received_frame[frame.current_frame], 1);
+    update_state(&frame);
+  }
+  int data_size;
+
+  if(frame.current_state == STATE_ERROR &&
+     (data_size = interpreter(&frame.received_frame, buffer)) == -1){
+    send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
+  } else {
+    send_non_info_frame(sequence_number == 0 ? C_REJ_0 : C_REJ_0);
+    return -1;
+  }
+  
+  return data_size;
 }

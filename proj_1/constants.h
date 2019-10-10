@@ -29,7 +29,8 @@ typedef enum {
   STATE_FLAG_E = 4,
   STATE_END = 5,
   STATE_DATA,
-  STATE_BCC2
+  STATE_BCC2,
+  STATE_ERROR
 } state_machine;
 
 #define MAX_SIZE 255 //TO-DO - Check actual value
@@ -51,6 +52,6 @@ typedef struct{
 typedef struct{
   state_machine current_state;
   int current_frame;
-  char control_field;
-  char* received_frame;
+  unsigned char control_field;
+  unsigned char* received_frame;
 } frame_t;
