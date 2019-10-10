@@ -154,7 +154,7 @@ void set_connection(link_layer layer) {
   (void) signal(SIGALRM, send_frame);
   send_frame();
   alarm(timeout);
-  unsigned char received_frame[5];
+  char received_frame[5];
   frame_t frame = {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
@@ -171,7 +171,7 @@ void set_connection(link_layer layer) {
 
 void acknowledge_connection() {
 
-  unsigned char received_frame[5];
+  char received_frame[5];
   frame_t frame = {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
@@ -209,7 +209,7 @@ void read_data(int fd, int sequence_number, char * buffer) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
   }
-  unsigned char sending_ack[5];
+  char sending_ack[5];
   sending_ack[0] = FLAG;
   sending_ack[4] = FLAG;
   sending_ack[1] = A;

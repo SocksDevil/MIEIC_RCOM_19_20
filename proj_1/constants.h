@@ -51,6 +51,6 @@ typedef struct{
 typedef struct{
   state_machine current_state;
   int current_frame;
-  unsigned char control_field;
-  unsigned char* received_frame;
+  char control_field;
+  char* received_frame;
 } frame_t;
