@@ -12,6 +12,9 @@
 #define STATE_BCC 3
 #define STATE_FLAG_E 4
 #define STATE_END 5
+#define ESCAPE_CHAR 0x7d
+#define FLAG_SUBST 0x5e
+#define ESCAPE_SUBST 0x5d
 
 #define MAX_SIZE 255 //TO-DO - Check actual value
 

@@ -1,8 +1,8 @@
 C = gcc
 CFLAGS = -Wall -Werror -Wextra
 
-SRC_EM = emitter.c
-SRC_REC = receptor.c
+SRC_EM = emitter.c utils.c serial_driver.c
+SRC_REC = receptor.c utils.c serial_driver.c
 OBJ_EM = $(SRC_EM:.c=.o)
 OBJ_REC = $(SRC_REC:.c=.o)
 EXEC1 = receptor
