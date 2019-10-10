@@ -22,14 +22,14 @@ int llopen(int port, connection_role role) {
   return fd;
 }
 
-int llwrite(int fd, char * buffer, int length) {
+// int llwrite(int fd, char * buffer, int length) {
 
-    // stuff buffer
+//     // stuff buffer
 
-    // send buffer
+//     // send buffer
   
-  return fd;
-}
+//   return fd;
+// }
 
 int llclose(int fd) {
     return close_connection(fd);
