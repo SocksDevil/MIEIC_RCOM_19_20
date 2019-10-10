@@ -10,6 +10,7 @@
 static struct termios oldtio;
 static int send_cnt = 0;
 static int fd;
+static int timeout;
 
 void send_frame() {
   send_cnt++;
@@ -28,6 +29,8 @@ void send_frame() {
     printf("Could not send message. Exiting program.\n");
     exit(1);
   }
+
+  alarm(timeout);
 }
 
 int open_connection(link_layer layer) {
@@ -114,16 +117,17 @@ int update_state(state_machine state, unsigned char  * received_frame, unsigned 
 }
 
 void set_connection(link_layer layer){
+  timeout = layer.timeout;
   (void) signal(SIGALRM, send_frame);
   send_frame();
-  alarm(layer.timeout);
+  alarm(timeout);
 
   state_machine state = STATE_FLAG_I;
   unsigned char received_frame[5];
-  while (state == STATE_END) {
+  while (state != STATE_END) {
     read(fd, &received_frame[state], 1);
     alarm(0);
-    state = update_state(state, received_frame, C_SET);
+    state = update_state(state, received_frame, C_UA);
   }
 }
 
@@ -134,7 +138,7 @@ void acknowledge_connection(){
   while (state == STATE_END) {
     read(fd, &received_frame[state], 1);
     alarm(0);
-    state = update_state(state, received_frame, C_UA);
+    state = update_state(state, received_frame, C_SET);
   }
 
   unsigned char sending_set[5];
