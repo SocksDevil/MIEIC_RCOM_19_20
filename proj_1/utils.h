@@ -1,8 +1,10 @@
 #pragma once
 
-int stuff_buffer(unsigned char ** buffer, int length);
+#include <stdint.h>
 
-int destuff_buffer(unsigned char ** buffer, int length);
+int stuff_buffer(uint8_t ** buffer, int length);
+
+int destuff_buffer(uint8_t ** buffer, int length);
  
 int parse_arguments(int argc, char *argv[]);
 
