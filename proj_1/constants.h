@@ -6,7 +6,15 @@
 #define FLAG 0x7E
 #define A 0x03
 #define C_SET 0x03
+#define C_DISC 0x0B
 #define C_UA 0x07
+#define C_RR_0 0x05
+#define C_RR_1 0x85
+#define C_REJ_0 0x01
+#define C_REJ_1 0x81
+#define C_RI_0 0x00
+#define C_RI_1 0x40
+
 #define SEND_ATTEMPTS 3
 #define TIMEOUT_T 3
 #define ESCAPE_CHAR 0x7d
@@ -19,7 +27,9 @@ typedef enum {
   STATE_C = 2,
   STATE_BCC = 3,
   STATE_FLAG_E = 4,
-  STATE_END = 5
+  STATE_END = 5,
+  STATE_DATA,
+  STATE_BCC2
 } state_machine;
 
 #define MAX_SIZE 255 //TO-DO - Check actual value
@@ -34,7 +44,13 @@ typedef enum{
 typedef struct{
   char port[20];                 /*Dispositivo /dev/ttySx, x = 0, 1*/
   int baud_rate;                  /*Velocidade de transmissão*/
-  unsigned int sequence_number;   /*Número de sequência da trama: 0, 1*/
   unsigned int timeout;          /*Valor do temporizador: 1 s*/
   unsigned int num_transmissions; /*Número de tentativas em caso defalha*/
 } link_layer;
+
+typedef struct{
+  state_machine current_state;
+  int current_frame;
+  char control_field;
+  char* received_frame;
+} frame_t;
