@@ -24,9 +24,12 @@ int llopen(int port, connection_role role) {
 
 int llwrite(int fd, char * buffer, int length) {
 
-    // stuff buffer
+  // stuff buffer
 
-    // send buffer
+  // send buffer
+  printf("%s\n", buffer);
+  printf("%d\n", length);
+
   
   return fd;
 }

@@ -88,3 +88,25 @@ int parse_arguments(int argc, char *argv[]){
   */
   return strtol(argv[1], NULL, 10);
 }
+
+int byte_size(unsigned long num) {
+    int size = 0;
+    while(num != 0) {
+        size++;
+        num = num >> 8;
+    }
+    return size;
+}
+
+int file_size(char * filename) {
+
+    FILE * fp = NULL;
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("fopen");
+        return -1;
+    }
+    fseek(fp, 0L, SEEK_END);
+    
+    return ftell(fp);
+}
