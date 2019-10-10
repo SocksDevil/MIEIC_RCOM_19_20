@@ -1,4 +1,8 @@
+#pragma once
 #include "constants.h"
-int llopen(int fd, connection_role role);
+
+int llopen(int port, connection_role role);
 
 int llwrite(int fd, char * buffer, int length);
+
+int llclose(int fd);

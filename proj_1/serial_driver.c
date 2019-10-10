@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+#include <strings.h>
 static struct termios oldtio;
 static int send_cnt = 0;
 static int fd;
@@ -27,8 +28,6 @@ void send_frame() {
     printf("Could not send message. Exiting program.\n");
     exit(1);
   }
-
-  alarm(TIMEOUT_T);
 }
 
 int open_connection(link_layer layer) {
@@ -65,40 +64,42 @@ int open_connection(link_layer layer) {
 }
 
 int close_connection(int fd){
-  tcsetattr(fd, TCSANOW, &oldtio);
-  close(fd);
+  if (tcsetattr(fd, TCSANOW, &oldtio)){
+    return close(fd);
+  }
+  return -1;
 }
 
-int update_state(int state, unsigned char  * received_frame){
+int update_state(state_machine state, unsigned char  * received_frame, unsigned char control_camp){
   switch (state) {
     case STATE_FLAG_I:
       if (received_frame[state] == FLAG)
-        state++;
+        state = STATE_A;
 
       break;
     case STATE_A:
 
       if (received_frame[state] == A)
-        state++;
+        state = STATE_C;
       else if (received_frame[state] != FLAG)
-        state = 0;
+        state = STATE_FLAG_I;
 
       break;
 
     case STATE_C:
-      if (received_frame[state] == C_SET)
-        state++;
+      if (received_frame[state] == control_camp)
+        state = STATE_BCC;
       else if (received_frame[state] == FLAG)
-        state = 1;
+        state = STATE_A;
       else
-        state = 0;
+        state = STATE_FLAG_I;
       break;
 
     case STATE_BCC:
-      if (received_frame[state] == (C_SET ^ A))
-        state++;
+      if (received_frame[state] == (control_camp ^ A))
+        state = STATE_FLAG_E;
       else
-        state = 0;
+        state = STATE_FLAG_I;
       break;
     case STATE_FLAG_E:
       if (received_frame[state] == FLAG) {
@@ -106,22 +107,43 @@ int update_state(int state, unsigned char  * received_frame){
       }
       else
         state = STATE_FLAG_I;
+    case STATE_END:
+        break;    
   }
   return state;
 }
 
-void set_connection(){
+void set_connection(link_layer layer){
   (void) signal(SIGALRM, send_frame);
   send_frame();
-  alarm(TIMEOUT_T);
+  alarm(layer.timeout);
 
-  unsigned char last = 0;
-  int state = 0;
-  char parity;
+  state_machine state = STATE_FLAG_I;
   unsigned char received_frame[5];
   while (state == STATE_END) {
     read(fd, &received_frame[state], 1);
     alarm(0);
-    state = update_state(state, received_frame);
+    state = update_state(state, received_frame, C_SET);
   }
+}
+
+void acknowledge_connection(){
+
+  state_machine state = STATE_FLAG_I;
+  unsigned char received_frame[5];
+  while (state == STATE_END) {
+    read(fd, &received_frame[state], 1);
+    alarm(0);
+    state = update_state(state, received_frame, C_UA);
+  }
+
+  unsigned char sending_set[5];
+  sending_set[0] = FLAG;
+  sending_set[4] = FLAG;
+  sending_set[1] = A;
+  sending_set[2] = C_UA;
+  sending_set[3] = sending_set[1] ^ sending_set[2];
+
+  printf("Success, sending UA\n");
+  write(fd, sending_set, 5);
 }

@@ -1,3 +1,6 @@
+#pragma once
+#include <termios.h>
+
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
 #define FLAG 0x7E
@@ -6,12 +9,15 @@
 #define C_UA 0x07
 #define SEND_ATTEMPTS 3
 #define TIMEOUT_T 3
-#define STATE_FLAG_I 0
-#define STATE_A 1
-#define STATE_C 2
-#define STATE_BCC 3
-#define STATE_FLAG_E 4
-#define STATE_END 5
+
+typedef enum {
+  STATE_FLAG_I = 0,
+  STATE_A = 1,
+  STATE_C = 2,
+  STATE_BCC = 3,
+  STATE_FLAG_E = 4,
+  STATE_END = 5
+} state_machine;
 
 #define MAX_SIZE 255 //TO-DO - Check actual value
 
@@ -28,5 +34,4 @@ typedef struct{
   unsigned int sequence_number;   /*Número de sequência da trama: 0, 1*/
   unsigned int timeout;          /*Valor do temporizador: 1 s*/
   unsigned int num_transmissions; /*Número de tentativas em caso defalha*/
-  char frame[MAX_SIZE];          /*Trama*/
 } link_layer;
