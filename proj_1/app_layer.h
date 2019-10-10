@@ -9,9 +9,7 @@
 #define TLV_SIZE_T 0
 #define TLV_NAME_T 1
 
-#define DATA_BYTES 10
-
-int send_file(char * filename, int fd);
+#define DATA_BYTES 500
 
 typedef enum{
     CTRL_DATA = 1,
@@ -38,3 +36,6 @@ typedef struct{
     uint8_t byte_n_high;
     uint8_t * data;
 } app_data_packet;
+
+
+int send_file(char * filename, int fd);

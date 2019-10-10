@@ -26,9 +26,10 @@ int llwrite(int fd, char * buffer, int length) {
 
   // stuff buffer
   // send buffer
-
-  printf("%s%d", buffer, length);
   
+  printf("%s%d", buffer, length);
+      
+  // TODO return number of written chars
   return fd;
 }
 
