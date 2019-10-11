@@ -12,6 +12,10 @@ int main(int argc, char * argv[]) {
         printf("Something went wrong!\n");
         return -1;
     }
+    int i = 0;
+    for (; argv[2][i] != '\0'; i++) {}
+    llwrite(fd, argv[2], ++i);
+    printf("Written %s to serial port\n", argv[2]);
 
     printf("Sucess!\n");
     
