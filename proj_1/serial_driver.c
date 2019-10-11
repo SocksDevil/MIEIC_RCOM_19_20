@@ -185,7 +185,7 @@ void acknowledge_connection() {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
     .received_frame = received_frame,
-    .control_field = C_UA};
+    .control_field = C_SET};
   for (;
        frame.current_frame < MAX_SIZE
        && frame.current_state != STATE_END
