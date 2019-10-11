@@ -16,6 +16,10 @@ int main(int argc, char **argv) {
     return -1;
   }
 
+  char buffer[MAX_SIZE];
+
+  llread(fd, buffer);
+  printf("Received %s from serial port\n", buffer);
   printf("Sucess!\n");
 
   if(llclose(fd) != 0){

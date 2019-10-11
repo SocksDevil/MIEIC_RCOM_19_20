@@ -15,9 +15,9 @@ static int fd;
 static int timeout;
 
 bool check_protection_field(
-  frame_t * frame ) {
+  frame_t *frame) {  
   return frame->received_frame[frame->current_frame] ==
-   (frame->control_field ^ frame->received_frame[STATE_A]);
+         (frame->control_field ^ frame->received_frame[STATE_A]);
 }
 
 bool is_non_info_frame(unsigned char received_frame) {
@@ -32,7 +32,7 @@ bool is_non_info_frame(unsigned char received_frame) {
 
 bool is_info_frame(frame_t *frame) {
   return frame->control_field == C_RI_0 ||
-        frame->control_field == C_RI_1;
+         frame->control_field == C_RI_1;
 }
 
 void send_frame() {
@@ -96,13 +96,13 @@ int close_connection(int fd) {
   return -1;
 }
 
-void update_bcc_state(frame_t * frame) {
-  if(check_protection_field(frame)){
-    if(is_info_frame(frame)){
+void update_bcc_state(frame_t *frame) {
+  if (check_protection_field(frame)) {
+    if (is_info_frame(frame)) {
       frame->current_state = STATE_DATA;
       return;
     }
-    else if(is_non_info_frame(frame->received_frame[frame->current_frame])){
+    else if (is_non_info_frame(frame->received_frame[frame->current_frame])) {
       frame->current_state = STATE_FLAG_E;
       return;
     }
@@ -120,10 +120,15 @@ void update_state(
       break;
     case STATE_A:
 
-      if (frame->received_frame[frame->current_frame] == A)
+      if (frame->received_frame[frame->current_frame] == A){
         frame->current_state = STATE_C;
-      else if (frame->received_frame[frame->current_frame] != FLAG)
+        break;
+      }
+      else if (frame->received_frame[frame->current_frame] != FLAG){
         frame->current_state = STATE_FLAG_I;
+        break;
+      }
+      frame->current_frame--;
 
       break;
 
@@ -141,13 +146,13 @@ void update_state(
       break;
 
     case STATE_DATA:
-      if(frame->received_frame[frame->current_frame] == FLAG)
+      if (frame->received_frame[frame->current_frame] == FLAG)
         frame->current_state = STATE_END;
-        
-      break;    
+
+      break;
 
     case STATE_FLAG_E:
-      if (frame->received_frame[frame->current_frame] == FLAG) 
+      if (frame->received_frame[frame->current_frame] == FLAG)
         frame->current_state = STATE_END;
       else
         frame->current_state = STATE_FLAG_I;
@@ -168,9 +173,7 @@ void set_connection(link_layer layer) {
     .received_frame = received_frame,
     .control_field = C_UA};
   for (;
-       frame.current_frame < MAX_SIZE
-       && frame.current_state != STATE_END
-       && frame.current_state != STATE_ERROR;
+       frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
        frame.current_frame++) {
     read(fd, &received_frame[frame.current_frame], 1);
     alarm(0);
@@ -185,11 +188,9 @@ void acknowledge_connection() {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
     .received_frame = received_frame,
-    .control_field = C_UA};
+    .control_field = C_SET};
   for (;
-       frame.current_frame < MAX_SIZE
-       && frame.current_state != STATE_END
-       && frame.current_state != STATE_ERROR;
+       frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
        frame.current_frame++) {
     read(fd, &received_frame[frame.current_frame], 1);
     update_state(&frame);
@@ -206,7 +207,7 @@ void acknowledge_connection() {
   write(fd, sending_set, 5);
 }
 
-void send_non_info_frame(unsigned char control_field){
+void send_non_info_frame(unsigned char control_field) {
   char sending_ack[5];
   sending_ack[0] = FLAG;
   sending_ack[4] = FLAG;
@@ -217,7 +218,7 @@ void send_non_info_frame(unsigned char control_field){
   write(fd, sending_ack, 5);
 }
 
-int read_data(int fd, int sequence_number, char * buffer) {
+int read_data(int fd, int sequence_number, char *buffer) {
   unsigned char received_frame[MAX_SIZE];
 
   frame_t frame = {
@@ -228,22 +229,63 @@ int read_data(int fd, int sequence_number, char * buffer) {
   };
 
   for (;
-       frame.current_frame < MAX_SIZE
-       && frame.current_state != STATE_END
-       && frame.current_state != STATE_ERROR;
+       frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
        frame.current_frame++) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
   }
+
   int data_size;
 
-  if(frame.current_state == STATE_ERROR &&
-     (data_size = interpreter(&frame.received_frame, buffer)) == -1){
+  if (frame.current_state != STATE_ERROR &&
+      (data_size = interpreter(frame.received_frame, buffer)) != -1) {
+    printf("Receiver ready!\n");    
     send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
-  } else {
+  }
+  else {
+    printf("Package rejected!\n");
     send_non_info_frame(sequence_number == 0 ? C_REJ_0 : C_REJ_0);
     return -1;
   }
-  
+
   return data_size;
+}
+
+int write_data(int fd, int sequence_number, char *buffer, int length) {
+  if (length + 6 <= MAX_SIZE) {
+    unsigned char data_frame[MAX_SIZE];
+    int index = 4;
+    data_frame[0] = FLAG;
+    data_frame[1] = A;
+    data_frame[2] = sequence_number == 0 ? C_RI_0 : C_RI_1;
+    data_frame[3] = data_frame[1] ^ data_frame[2];
+    char xor = buffer[0];
+    data_frame[index++] = buffer[0];
+    for (int i = 1; i < length; index++, i++) { //Generalize with llinterpretation
+      xor ^= buffer[i];
+      data_frame[index] = buffer[i];
+    }
+    data_frame[index++] = xor;
+    data_frame[index++] = FLAG;
+    int written_bytes = write(fd, data_frame, index);
+    unsigned char received_frame[MAX_SIZE];
+
+    frame_t frame = {
+      .current_state = STATE_FLAG_I,
+      .current_frame = 0,
+      .received_frame = received_frame,
+      .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
+    };
+
+    for (;
+         frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
+         frame.current_frame++) {
+      read(fd, &frame.received_frame[frame.current_frame], 1);
+      update_state(&frame);
+    }
+    if (frame.current_state == STATE_ERROR)
+      return -1;
+    return written_bytes;
+  }
+  return -1;
 }

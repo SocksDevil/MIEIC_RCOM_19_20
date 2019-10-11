@@ -75,7 +75,7 @@ int destuff_buffer(unsigned char ** buffer, int length) {
 }
 
 int parse_arguments(int argc, char *argv[]){
-  if ((argc < 2) ||
+  if ((argc < 3) ||
       ((strcmp("0", argv[1]) != 0) &&
        (strcmp("1", argv[1]) != 0))) {
     printf("Usage:\tnserial SerialPort\n\tex: nserial 1\n");
