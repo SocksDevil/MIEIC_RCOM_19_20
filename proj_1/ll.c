@@ -1,5 +1,6 @@
-#include "ll.h"
 #include <stdio.h>
+#include <string.h>
+#include "ll.h"
 #include "serial_driver.h"
 
 static link_layer layer;
@@ -26,10 +27,17 @@ int llwrite(int fd, char * buffer, int length) {
 
   // stuff buffer
   // send buffer
-  
+
   printf("%s%d", buffer, length);
-      
+
   // TODO return number of written chars
+  return fd;
+}
+
+int llread(int fd, char * buffer) {
+
+  printf("%s", buffer);
+
   return fd;
 }
 

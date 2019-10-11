@@ -10,6 +10,7 @@
 #define TLV_NAME_T 1
 
 #define DATA_BYTES 500
+#define MAX_FRAME_SIZE ((1 << 16) - 1 + 4) // USHORT_MAX + 4
 
 typedef enum{
     CTRL_DATA = 1,
@@ -37,5 +38,19 @@ typedef struct{
     uint8_t * data;
 } app_data_packet;
 
+typedef struct{
+    char * filename;
+    long filesize;
+} ctrl_info;
+
+/*typedef enum {
+    START_STATE = 0,
+    DATA_STATE,
+    END_STATE,
+    FINAL_STATE
+} al_state_machine;
+*/
 
 int send_file(char * filename, int fd);
+
+int read_file(int fd);

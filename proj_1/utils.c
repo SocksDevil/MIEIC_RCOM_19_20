@@ -89,8 +89,8 @@ int parse_arguments(int argc, char *argv[]){
   return strtol(argv[1], NULL, 10);
 }
 
-int byte_size(unsigned long num) {
-    int size = 0;
+unsigned char byte_size(long num) {
+    unsigned char size = 0;
     while(num != 0) {
         size++;
         num = num >> 8;
@@ -98,7 +98,7 @@ int byte_size(unsigned long num) {
     return size;
 }
 
-int file_size(char * filename) {
+long file_size(char * filename) {
 
     FILE * fp = NULL;
     fp = fopen(filename, "r");
