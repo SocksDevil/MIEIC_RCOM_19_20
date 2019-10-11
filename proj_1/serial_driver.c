@@ -133,12 +133,17 @@ void update_state(
       break;
 
     case STATE_C:
-      if (frame->received_frame[frame->current_frame] == frame->control_field)
+      if (frame->received_frame[frame->current_frame] == frame->control_field){
         frame->current_state = STATE_BCC;
-      else if (frame->received_frame[frame->current_frame] == FLAG)
+      }
+      else if (frame->received_frame[frame->current_frame] == FLAG){
         frame->current_state = STATE_A;
-      else
+        frame->current_frame--;
+      }
+      else{
         frame->current_state = STATE_FLAG_I;
+        frame->current_frame = -1;
+      }
       break;
 
     case STATE_BCC:
@@ -154,8 +159,10 @@ void update_state(
     case STATE_FLAG_E:
       if (frame->received_frame[frame->current_frame] == FLAG)
         frame->current_state = STATE_END;
-      else
+      else{
         frame->current_state = STATE_FLAG_I;
+        frame->current_frame = -1;
+      }
     default:
       break;
   }
