@@ -1,6 +1,7 @@
-#include "ll.h"
-#include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+#include "ll.h"
 #include "serial_driver.h"
 
 static link_layer layer;

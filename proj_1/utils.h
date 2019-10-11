@@ -8,6 +8,6 @@ int destuff_buffer(uint8_t ** buffer, int length);
  
 int parse_arguments(int argc, char *argv[]);
 
-int byte_size(unsigned long num);
+unsigned char byte_size(long num);
 
-int file_size(char * filename);
+long file_size(char * filename);

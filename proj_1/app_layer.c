@@ -5,13 +5,14 @@
 #include <stdio.h>
 #include <limits.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "app_layer.h"
 #include "utils.h"
 #include "ll.h"
 
-app_ctrl_packet prepare_ctrl_packet(app_ctrl_field packet_type, char * filename, unsigned long filesize) {
+app_ctrl_packet prepare_ctrl_packet(app_ctrl_field packet_type, char * filename, long filesize) {
 
-    int filesize_size = byte_size(filesize);
+    uint8_t filesize_size = byte_size(filesize);
     int filename_size = strlen(filename)+1;
 
     // header
@@ -141,7 +142,7 @@ int send_file(char * filename, int fd) {
         return -1;
     }
 
-    unsigned long filesize = file_size(filename);
+    long filesize = file_size(filename);
 
     // start ctrl packet
     app_ctrl_packet start_packet = prepare_ctrl_packet(CTRL_START, filename, filesize);
@@ -178,6 +179,168 @@ int send_file(char * filename, int fd) {
         perror("close file_fd");
         return -1;
     }
+
+    return 0;
+}
+
+ctrl_info parse_ctrl_packet(char * buffer, unsigned short size) {
+
+    unsigned short i = 1;
+    ctrl_info info;
+    info.filesize = 0;
+    info.filename = NULL;
+
+    if(buffer[0] != CTRL_START && buffer[0] != CTRL_END) {
+        printf("Wrong control field value, expected 2, got %d\n", buffer[0]);
+        return info;
+    }
+
+    // handle i segfaults if corrupted packet
+    while(i < size) {
+        uint8_t type = (uint8_t) buffer[i++];
+        uint8_t length = (uint8_t) buffer[i++];
+        
+        switch(type) {
+            case TLV_SIZE_T:
+                for (int j = 0; j < length; j++)
+                    info.filesize = (((unsigned long) info.filesize) << 8) + (uint8_t) buffer[i++];
+                break;
+
+            case TLV_NAME_T:
+                info.filename = (char*) malloc(sizeof(char) * length);
+                for (int j = 0; j < length; j++)
+                    info.filename[j] = buffer[i++];
+
+                break;
+
+            default:
+                printf("Unknown TLV type\n");
+        }
+
+    }
+
+    return info;
+}
+
+int parse_data_packet(char * buffer, unsigned short size, int fd, uint8_t seq_number) {
+
+    if (size < 4) {
+        printf("Invalid data packet: small size\n");
+        return -1;
+    }
+
+    if (buffer[0] != CTRL_DATA) {
+        printf("Wrong control field value. Got %u expected 1\n", buffer[0]);
+        return -1;
+    }
+
+    if (buffer[1] != seq_number) {
+        printf("Wrong sequence number. Got %u, expected %u\n", buffer[1], seq_number);
+        return -1;
+    }
+
+    unsigned short length = ((uint8_t) buffer[2] << 8) + (uint8_t) buffer[3];
+    if (size != length + 4) {
+        printf("Invalid data packet: unexpected file size. Expected %d, got %d\n", size, length+4);
+        return -1;
+    }
+    
+    for (unsigned short i = 4; i < length+4; i++) {
+        if (write(fd, &buffer[i], 1) == -1) {
+            perror("write data");
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+bool matching_ctrl_packets(ctrl_info start, ctrl_info end) {
+
+    // validate filenames
+    if(strcmp(start.filename, end.filename)) {
+        printf("Conflicting filenames in control packets\n");
+        return false;
+    }
+
+    long filesize = file_size(start.filename);
+    if(filesize != start.filesize || filesize != end.filesize) {
+        printf("Wrong filesize in control packets\n");
+        return false;
+    }
+
+    return true;    
+}
+
+int read_file(int fd) {
+    
+    // TODO check the buffer size
+    char buffer[MAX_FRAME_SIZE];
+    unsigned short count;
+    ctrl_info start_info, end_info;
+
+    // read start control packet
+    if ((count = (unsigned short) llread(fd, buffer)) <= 0) {
+        printf("Application layer: Couldn't read start packet\n");
+        return -1;
+    }
+
+    // interpret start packet
+    start_info = parse_ctrl_packet(buffer, count);
+    if (start_info.filename == NULL) {
+        printf("Invalid start control packet\n");
+        return -1;
+    }
+
+    // open new file
+    int new_fd;
+    if((new_fd = open(start_info.filename, O_WRONLY | O_CREAT, 0660)) == -1) {
+        perror("open filename");
+        return -1;
+    }
+
+    // read packets until end
+    uint8_t seq_number = 0;
+    bool reached_end = false;
+    while(!reached_end) {
+
+        if ((count = (unsigned short) llread(fd,buffer)) <= 0) {
+            printf("Reached end of input and did not find control end\n");
+            return -1;
+        }
+
+        // reached final packet
+        if (buffer[0] == CTRL_END) {
+            reached_end = true;
+            break;
+        }
+
+        // interpret data
+        if (parse_data_packet(buffer, count, new_fd, seq_number++ % UCHAR_MAX) == -1) {
+            printf("Error parsing data packet\n");
+            return -1;
+        }
+    }
+
+    // interpret final packet
+    end_info = parse_ctrl_packet(buffer, count);
+    if (end_info.filename == NULL) {
+        printf("Invalid end control packet\n");
+        return -1;
+    }
+
+    if(close(new_fd) == -1) {
+        perror("close");
+        return -1;
+    }
+
+    if(!matching_ctrl_packets(start_info, end_info)) {
+        printf("Error validating control packets\n");
+        return -1;
+    }
+
+    free(start_info.filename);
+    free(end_info.filename);
 
     return 0;
 }
