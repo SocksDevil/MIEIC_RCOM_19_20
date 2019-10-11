@@ -15,7 +15,7 @@ static int fd;
 static int timeout;
 
 bool check_protection_field(
-  frame_t *frame) {
+  frame_t *frame) {  
   return frame->received_frame[frame->current_frame] ==
          (frame->control_field ^ frame->received_frame[STATE_A]);
 }
@@ -120,10 +120,15 @@ void update_state(
       break;
     case STATE_A:
 
-      if (frame->received_frame[frame->current_frame] == A)
+      if (frame->received_frame[frame->current_frame] == A){
         frame->current_state = STATE_C;
-      else if (frame->received_frame[frame->current_frame] != FLAG)
+        break;
+      }
+      else if (frame->received_frame[frame->current_frame] != FLAG){
         frame->current_state = STATE_FLAG_I;
+        break;
+      }
+      frame->current_frame--;
 
       break;
 
@@ -229,13 +234,16 @@ int read_data(int fd, int sequence_number, char *buffer) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
   }
+
   int data_size;
 
-  if (frame.current_state == STATE_ERROR &&
-      (data_size = interpreter(&frame.received_frame, buffer)) == -1) {
+  if (frame.current_state != STATE_ERROR &&
+      (data_size = interpreter(frame.received_frame, buffer)) != -1) {
+    printf("Receiver ready!\n");    
     send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
   }
   else {
+    printf("Package rejected!\n");
     send_non_info_frame(sequence_number == 0 ? C_REJ_0 : C_REJ_0);
     return -1;
   }
@@ -252,7 +260,8 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
     data_frame[2] = sequence_number == 0 ? C_RI_0 : C_RI_1;
     data_frame[3] = data_frame[1] ^ data_frame[2];
     char xor = buffer[0];
-    for (int i = 0; i < length; index++, i++) { //Generalize with llinterpretation
+    data_frame[index++] = buffer[0];
+    for (int i = 1; i < length; index++, i++) { //Generalize with llinterpretation
       xor ^= buffer[i];
       data_frame[index] = buffer[i];
     }
