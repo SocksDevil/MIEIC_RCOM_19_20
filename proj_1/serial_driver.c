@@ -14,8 +14,12 @@ static int send_cnt = 0;
 static int fd;
 static int timeout;
 
+static unsigned char data_frame1[MAX_SIZE];
+static unsigned char data_frame2[MAX_SIZE];
+static bool to_resend = false;;
+
 bool check_protection_field(
-  frame_t *frame) {  
+  frame_t *frame) {
   return frame->received_frame[frame->current_frame] ==
          (frame->control_field ^ frame->received_frame[STATE_A]);
 }
@@ -120,11 +124,11 @@ void update_state(
       break;
     case STATE_A:
 
-      if (frame->received_frame[frame->current_frame] == A){
+      if (frame->received_frame[frame->current_frame] == A) {
         frame->current_state = STATE_C;
         break;
       }
-      else if (frame->received_frame[frame->current_frame] != FLAG){
+      else if (frame->received_frame[frame->current_frame] != FLAG) {
         frame->current_state = STATE_FLAG_I;
         break;
       }
@@ -133,14 +137,14 @@ void update_state(
       break;
 
     case STATE_C:
-      if (frame->received_frame[frame->current_frame] == frame->control_field){
+      if (frame->received_frame[frame->current_frame] == frame->control_field) {
         frame->current_state = STATE_BCC;
       }
-      else if (frame->received_frame[frame->current_frame] == FLAG){
+      else if (frame->received_frame[frame->current_frame] == FLAG) {
         frame->current_state = STATE_A;
         frame->current_frame--;
       }
-      else{
+      else {
         frame->current_state = STATE_FLAG_I;
         frame->current_frame = -1;
       }
@@ -159,7 +163,7 @@ void update_state(
     case STATE_FLAG_E:
       if (frame->received_frame[frame->current_frame] == FLAG)
         frame->current_state = STATE_END;
-      else{
+      else {
         frame->current_state = STATE_FLAG_I;
         frame->current_frame = -1;
       }
@@ -246,7 +250,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
 
   if (frame.current_state != STATE_ERROR &&
       (data_size = interpreter(frame.received_frame, buffer)) != -1) {
-    printf("Receiver ready!\n");    
+    printf("Receiver ready!\n");
     send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
   }
   else {
@@ -258,9 +262,14 @@ int read_data(int fd, int sequence_number, char *buffer) {
   return data_size;
 }
 
-int write_data(int fd, int sequence_number, char *buffer, int length) {
+
+
+ int prepare_data_frame(int sequence_number, char *buffer, int length, unsigned char * frame) {
+  unsigned char *data_frame;
+  data_frame = sequence_number == 0 ? data_frame1 : data_frame2;
+
   if (length + 6 <= MAX_SIZE) {
-    unsigned char data_frame[MAX_SIZE];
+    //unsigned char data_frame[MAX_SIZE];
     int index = 4;
     data_frame[0] = FLAG;
     data_frame[1] = A;
@@ -274,25 +283,47 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
     }
     data_frame[index++] = xor;
     data_frame[index++] = FLAG;
-    int written_bytes = write(fd, data_frame, index);
-    unsigned char received_frame[MAX_SIZE];
 
-    frame_t frame = {
-      .current_state = STATE_FLAG_I,
-      .current_frame = 0,
-      .received_frame = received_frame,
-      .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
-    };
-
-    for (;
-         frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
-         frame.current_frame++) {
-      read(fd, &frame.received_frame[frame.current_frame], 1);
-      update_state(&frame);
-    }
-    if (frame.current_state == STATE_ERROR)
-      return -1;
-    return written_bytes;
+    frame = data_frame;
+    return index;
   }
   return -1;
+ }
+
+  void timeout_handler(){
+    to_resend = true;
+  }  
+  
+  int write_data(int fd, int sequence_number, char *buffer, int length) {
+    unsigned char * data_frame;
+   int index = prepare_data_frame(sequence_number,buffer,length,data_frame);
+    if(data_frame == NULL)
+      return -1;
+    int written_bytes;
+    (void) signal(SIGALRM, timeout_handler);
+    do {
+      written_bytes = write(fd, data_frame, index);
+      unsigned char received_frame[MAX_SIZE];
+
+      frame_t frame = {
+        .current_state = STATE_FLAG_I,
+        .current_frame = 0,
+        .received_frame = received_frame,
+        .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
+      };
+      alarm(timeout);
+      for (;
+           frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
+           frame.current_frame++) {
+        read(fd, &frame.received_frame[frame.current_frame], 1);
+        update_state(&frame);
+      }
+      if (frame.current_state == STATE_END){
+        alarm(0);
+        to_resend = false;
+      }
+      else to_resend = true;
+    } while (to_resend);
+  
+  return written_bytes;
 }
