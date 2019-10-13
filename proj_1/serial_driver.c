@@ -1,4 +1,5 @@
 #include "serial_driver.h"
+
 #include <fcntl.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -7,6 +8,8 @@
 #include <strings.h>
 #include <termios.h>
 #include <unistd.h>
+
+#include "data_frame.h"
 #include "llinterpretation.h"
 
 static struct termios oldtio;
@@ -14,9 +17,7 @@ static int send_cnt = 0;
 static int fd;
 static int timeout;
 
-static unsigned char data_frame1[MAX_SIZE];
-static unsigned char data_frame2[MAX_SIZE];
-static bool to_resend = false;;
+static bool to_resend = false;
 
 bool check_protection_field(
   frame_t *frame) {
@@ -106,7 +107,7 @@ void update_bcc_state(frame_t *frame) {
       frame->current_state = STATE_DATA;
       return;
     }
-    else if (is_non_info_frame(frame->received_frame[frame->current_frame])) {
+    else if (is_non_info_frame(frame->received_frame[STATE_C])) {
       frame->current_state = STATE_FLAG_E;
       return;
     }
@@ -174,6 +175,7 @@ void update_state(
 
 void set_connection(link_layer layer) {
   timeout = layer.timeout;
+  set_timeout(timeout);
   (void) signal(SIGALRM, send_frame);
   send_frame();
   alarm(timeout);
@@ -245,13 +247,14 @@ int read_data(int fd, int sequence_number, char *buffer) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
   }
+  printf("\n");
 
   int data_size;
 
   if (frame.current_state != STATE_ERROR &&
       (data_size = interpreter(frame.received_frame, buffer)) != -1) {
     printf("Receiver ready!\n");
-    send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
+    // send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
   }
   else {
     printf("Package rejected!\n");
@@ -262,68 +265,36 @@ int read_data(int fd, int sequence_number, char *buffer) {
   return data_size;
 }
 
+int write_data(int fd, int sequence_number, char *buffer, int length) {
+  int written_bytes = prepare_data_frame(sequence_number, buffer, length, fd);
+  if (written_bytes == -1)
+    return -1;
+  (void) signal(SIGALRM, write_data_frame);
+  do {
+    write_data_frame();
+    unsigned char received_frame[MAX_SIZE];
 
-
- int prepare_data_frame(int sequence_number, char *buffer, int length, unsigned char * frame) {
-  unsigned char *data_frame;
-  data_frame = sequence_number == 0 ? data_frame1 : data_frame2;
-
-  if (length + 6 <= MAX_SIZE) {
-    //unsigned char data_frame[MAX_SIZE];
-    int index = 4;
-    data_frame[0] = FLAG;
-    data_frame[1] = A;
-    data_frame[2] = sequence_number == 0 ? C_RI_0 : C_RI_1;
-    data_frame[3] = data_frame[1] ^ data_frame[2];
-    char xor = buffer[0];
-    data_frame[index++] = buffer[0];
-    for (int i = 1; i < length; index++, i++) { //Generalize with llinterpretation
-      xor ^= buffer[i];
-      data_frame[index] = buffer[i];
+    frame_t frame = {
+      .current_state = STATE_FLAG_I,
+      .current_frame = 0,
+      .received_frame = received_frame,
+      .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
+    };
+    for (;
+         frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
+         frame.current_frame++) {
+      read(fd, &frame.received_frame[frame.current_frame], 1);
+      update_state(&frame);
     }
-    data_frame[index++] = xor;
-    data_frame[index++] = FLAG;
+    printf("%d\n", frame.current_state);
+    if (frame.current_state == STATE_END) {
+      printf("Received receiver ready!\n");
+      alarm(0);
+      to_resend = false;
+    }
+    else
+      to_resend = true;
+  } while (to_resend);
 
-    frame = data_frame;
-    return index;
-  }
-  return -1;
- }
-
-  void timeout_handler(){
-    to_resend = true;
-  }  
-  
-  int write_data(int fd, int sequence_number, char *buffer, int length) {
-    unsigned char * data_frame;
-   int index = prepare_data_frame(sequence_number,buffer,length,data_frame);
-    if(data_frame == NULL)
-      return -1;
-    int written_bytes;
-    (void) signal(SIGALRM, timeout_handler);
-    do {
-      written_bytes = write(fd, data_frame, index);
-      unsigned char received_frame[MAX_SIZE];
-
-      frame_t frame = {
-        .current_state = STATE_FLAG_I,
-        .current_frame = 0,
-        .received_frame = received_frame,
-        .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
-      };
-      alarm(timeout);
-      for (;
-           frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
-           frame.current_frame++) {
-        read(fd, &frame.received_frame[frame.current_frame], 1);
-        update_state(&frame);
-      }
-      if (frame.current_state == STATE_END){
-        alarm(0);
-        to_resend = false;
-      }
-      else to_resend = true;
-    } while (to_resend);
-  
   return written_bytes;
 }
