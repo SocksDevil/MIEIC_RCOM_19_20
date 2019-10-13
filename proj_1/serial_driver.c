@@ -61,6 +61,29 @@ void send_frame() {
   alarm(timeout);
 }
 
+void check_control_field(frame_t *frame) {
+  if (frame->received_frame[frame->current_frame] == frame->control_field) {
+    frame->current_state = STATE_BCC;
+  }
+  else if (frame->received_frame[frame->current_frame] == FLAG) {
+    frame->current_state = STATE_A;
+    frame->current_frame--;
+  }
+  else {
+    frame->current_state = STATE_FLAG_I;
+    frame->current_frame = -1;
+  }
+}
+
+void check_data_ack(frame_t *frame) {
+  if (frame->received_frame[frame->current_frame] != 
+      (frame->sequence_number == 0 ? C_REJ_0 : C_REJ_1) ) {
+    check_control_field(frame);
+  }else{
+    frame->current_state = STATE_ERROR;
+  }
+}
+
 int open_connection(link_layer layer) {
   struct termios newtio;
   /*
@@ -138,17 +161,7 @@ void update_state(
       break;
 
     case STATE_C:
-      if (frame->received_frame[frame->current_frame] == frame->control_field) {
-        frame->current_state = STATE_BCC;
-      }
-      else if (frame->received_frame[frame->current_frame] == FLAG) {
-        frame->current_state = STATE_A;
-        frame->current_frame--;
-      }
-      else {
-        frame->current_state = STATE_FLAG_I;
-        frame->current_frame = -1;
-      }
+      frame->control_verification(frame);
       break;
 
     case STATE_BCC:
@@ -184,7 +197,8 @@ void set_connection(link_layer layer) {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
     .received_frame = received_frame,
-    .control_field = C_UA};
+    .control_field = C_UA,
+    .control_verification = check_control_field};
   for (;
        frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
        frame.current_frame++) {
@@ -201,7 +215,8 @@ void acknowledge_connection() {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
     .received_frame = received_frame,
-    .control_field = C_SET};
+    .control_field = C_SET,
+    .control_verification = check_control_field};
   for (;
        frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
        frame.current_frame++) {
@@ -239,7 +254,8 @@ int read_data(int fd, int sequence_number, char *buffer) {
     .current_frame = 0,
     .received_frame = received_frame,
     .control_field = sequence_number == 0 ? C_RI_0 : C_RI_1,
-  };
+    .sequence_number = sequence_number,
+    .control_verification = check_control_field};
 
   for (;
        frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
@@ -254,7 +270,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
   if (frame.current_state != STATE_ERROR &&
       (data_size = interpreter(frame.received_frame, buffer)) != -1) {
     printf("Receiver ready!\n");
-    // send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
+    send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
   }
   else {
     printf("Package rejected!\n");
@@ -279,7 +295,8 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
       .current_frame = 0,
       .received_frame = received_frame,
       .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
-    };
+      .sequence_number = sequence_number,
+      .control_verification = check_data_ack};
     for (;
          frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
          frame.current_frame++) {
@@ -292,8 +309,10 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
       alarm(0);
       to_resend = false;
     }
-    else
+    else {
+      printf("Receiver rejected!\n");
       to_resend = true;
+    }
   } while (to_resend);
 
   return written_bytes;
