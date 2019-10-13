@@ -76,11 +76,22 @@ void check_control_field(frame_t *frame) {
 }
 
 void check_data_ack(frame_t *frame) {
-  if (frame->received_frame[frame->current_frame] != 
-      (frame->sequence_number == 0 ? C_REJ_0 : C_REJ_1) ) {
+  if (frame->received_frame[frame->current_frame] !=
+      (frame->sequence_number == 0 ? C_REJ_0 : C_REJ_1)) {
     check_control_field(frame);
-  }else{
+  }
+  else {
     frame->current_state = STATE_ERROR;
+  }
+}
+
+void read_data_frame(frame_t *frame) {
+  if (frame->received_frame[frame->current_frame] !=
+      (frame->sequence_number == 0 ? C_RI_1 : C_REJ_0)) {
+    check_control_field(frame);
+  }
+  else {
+    frame->current_state = STATE_WRONG_SEQ_NUM;
   }
 }
 
@@ -166,6 +177,11 @@ void update_state(
 
     case STATE_BCC:
       update_bcc_state(frame);
+      break;
+
+    case STATE_WRONG_SEQ_NUM:
+      if (frame->received_frame[frame->current_frame] == FLAG)
+        frame->current_state = STATE_WRONG_SEQ_END;
       break;
 
     case STATE_DATA:
@@ -255,10 +271,13 @@ int read_data(int fd, int sequence_number, char *buffer) {
     .received_frame = received_frame,
     .control_field = sequence_number == 0 ? C_RI_0 : C_RI_1,
     .sequence_number = sequence_number,
-    .control_verification = check_control_field};
+    .control_verification = read_data_frame};
 
   for (;
-       frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
+       frame.current_frame < MAX_SIZE &&
+       frame.current_state != STATE_END &&
+       frame.current_state != STATE_ERROR &&
+       frame.current_state != STATE_WRONG_SEQ_END;
        frame.current_frame++) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
@@ -266,15 +285,23 @@ int read_data(int fd, int sequence_number, char *buffer) {
   printf("\n");
 
   int data_size;
-
   if (frame.current_state != STATE_ERROR &&
       (data_size = interpreter(frame.received_frame, buffer)) != -1) {
     printf("Receiver ready!\n");
     send_non_info_frame(sequence_number == 0 ? C_RR_0 : C_RR_1);
+    save_last_frame(received_frame, sequence_number);
   }
-  else {
+  else if (frame.current_state == STATE_ERROR) {
     printf("Package rejected!\n");
     send_non_info_frame(sequence_number == 0 ? C_REJ_0 : C_REJ_0);
+    return -1;
+  }
+  else if (frame.current_state == STATE_WRONG_SEQ_END) {
+    int opposite_seq_num = (sequence_number ^ 1);
+    if (is_same_frame(received_frame, opposite_seq_num))
+      send_non_info_frame(opposite_seq_num == 0 ? C_RR_0 : C_RR_1);
+    else
+      send_non_info_frame(opposite_seq_num == 0 ? C_REJ_0 : C_REJ_1);
     return -1;
   }
 

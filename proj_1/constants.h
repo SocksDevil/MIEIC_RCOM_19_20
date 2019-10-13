@@ -30,7 +30,9 @@ typedef enum {
   STATE_END = 5,
   STATE_DATA,
   STATE_BCC2,
-  STATE_ERROR
+  STATE_ERROR,
+  STATE_WRONG_SEQ_NUM,
+  STATE_WRONG_SEQ_END,
 } state_machine;
 
 #define MAX_SIZE 255 //TO-DO - Check actual value
