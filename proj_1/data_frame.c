@@ -62,10 +62,10 @@ void write_data_frame(){
 
 void save_last_frame(unsigned char * received_frame, int sequence_number){
   unsigned char * data_frame = sequence_number == 0 ? data_frame0 : data_frame1;
-  strcpy((char *)data_frame, (char * )received_frame);
+  frame_cpy((char *)data_frame, (char * )received_frame);
 }
 
 bool is_same_frame(unsigned char * received_frame, int sequence_number){
   unsigned char *data_frame = sequence_number == 0 ? data_frame0 : data_frame1;
-  return strcmp((char * )received_frame,(char *) data_frame) == 0;
+  return frame_cmp((char * )received_frame,(char *) data_frame) == 0;
 }

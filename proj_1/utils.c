@@ -131,3 +131,17 @@ int frame_cmp(unsigned char *p1, unsigned char *p2) {
 
 
 }
+
+unsigned char* frame_cpy(unsigned char *dest,unsigned char *src){
+    *dest = *src;
+
+    do{
+        src++;
+        dest++;
+
+        *dest = *src;
+
+    }
+    while(*src != FLAG);
+    return dest;
+}
