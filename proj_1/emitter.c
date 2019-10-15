@@ -19,6 +19,6 @@ int main(int argc, char * argv[]) {
 
     printf("Sucess!\n");
     
-    llclose(fd);
+    llclose(fd, TRANSMITTER);
     return 0;
 }

@@ -9,11 +9,13 @@ typedef void (*control_func)(frame_t *);
 
 int open_connection(link_layer layer);
 
-void set_connection(link_layer layer);
+int set_connection(link_layer layer);
 
-void acknowledge_connection();
+int acknowledge_connection();
 
-int close_connection(int fd);
+int emitter_disconnect(int fd);
+
+int receptor_disconnect(int fd);
 
 int read_data(int fd, int sequence_number, char *buffer);
 
