@@ -33,6 +33,7 @@ typedef enum {
   STATE_ERROR,
   STATE_WRONG_SEQ_NUM,
   STATE_WRONG_SEQ_END,
+  STATE_DISCONNECT
 } state_machine;
 
 #define MAX_SIZE 255 //TO-DO - Check actual value
