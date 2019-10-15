@@ -91,7 +91,7 @@ void check_data_ack(frame_t *frame) {
 
 void read_data_frame(frame_t *frame) {
   if (frame->received_frame[frame->current_frame] !=
-      (frame->sequence_number == 0 ? C_RI_1 : C_REJ_0)) {
+      (frame->sequence_number == 0 ? C_RI_1 : C_RI_0)) {
     check_control_field(frame);
   }
   else {
