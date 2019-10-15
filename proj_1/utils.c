@@ -110,3 +110,24 @@ long file_size(char * filename) {
     
     return ftell(fp);
 }
+
+int frame_cmp(unsigned char *p1, unsigned char *p2) {
+      unsigned char * s1 = p1;
+      unsigned char * s2 = p2;
+      unsigned char c1,c2;
+    if(*s1 != *s2)
+        return s1-s2;
+
+  do{
+    s1++;
+    s2++;
+      c1 = *s1;
+      c2 = *s2;
+      if(c1 == FLAG)
+        return c1-c2;
+
+  }while(c1 == c2);
+    return c1-c2;
+
+
+}
