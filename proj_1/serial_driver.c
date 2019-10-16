@@ -76,22 +76,22 @@ void check_control_field(frame_t *frame) {
 }
 
 void check_data_ack(frame_t *frame) {
-  if (frame->received_frame[frame->current_frame] !=
+  if (frame->received_frame[frame->current_frame] ==
       (frame->sequence_number == 0 ? C_REJ_0 : C_REJ_1)) {
-    check_control_field(frame);
+    frame->current_state = STATE_ERROR;
   }
   else {
-    frame->current_state = STATE_ERROR;
+    check_control_field(frame);
   }
 }
 
 void read_data_frame(frame_t *frame) {
-  if (frame->received_frame[frame->current_frame] !=
+  if (frame->received_frame[frame->current_frame] ==
       (frame->sequence_number == 0 ? C_RI_1 : C_RI_0)) {
-    check_control_field(frame);
+    frame->current_state = STATE_WRONG_SEQ_NUM;
   }
   else {
-    frame->current_state = STATE_WRONG_SEQ_NUM;
+    check_control_field(frame);
   }
 }
 

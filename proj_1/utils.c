@@ -138,10 +138,9 @@ unsigned char* frame_cpy(unsigned char *dest,unsigned char *src){
     do{
         src++;
         dest++;
-
         *dest = *src;
-
     }
     while(*src != FLAG);
+    
     return dest;
 }
