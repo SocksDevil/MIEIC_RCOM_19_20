@@ -220,10 +220,11 @@ frame_t read_control_frame(unsigned char control_field) {
 }
 
 int close_connection(int fd){
-  if (tcsetattr(fd, TCSANOW, &oldtio) == 0) {
-    return close(fd);
+  if (tcsetattr(fd, TCSANOW, &oldtio) != 0) {
+    printf("Failed to set back the old termio!\n");
+    return -1;
   }
-  return -1;
+  return close(fd);
 }
 
 int emitter_disconnect(int fd) {
@@ -233,17 +234,14 @@ int emitter_disconnect(int fd) {
 
   launch_disconnect_alarm(fd, 3);
 
-  write_disconnect();
-
   frame_t frame = read_control_frame(C_DISC);
 
-  printf("received on disconnect: %d\n", frame.current_state);
   if (frame.current_state == STATE_END) {
-    printf("Disconnecting");
-    send_non_info_frame(fd, C_UA);
-    close_connection(fd);
+    return -1;
   }
-  return -1;
+  printf("Disconnecting");
+  send_non_info_frame(fd, C_UA);
+  return close_connection(fd);
 }
 
 int set_connection(link_layer layer) {
@@ -254,8 +252,8 @@ int set_connection(link_layer layer) {
   alarm(timeout);
   frame_t frame = read_control_frame(C_UA);
   if(frame.current_state == STATE_END)
-    return -1;
-  return 0;  
+    return 0;  
+  return -1;
 }
 
 int acknowledge_connection() {
@@ -272,6 +270,7 @@ int acknowledge_connection() {
 
     printf("Success, sending UA\n");
     write(fd, sending_set, 5);
+    return 0;
   }
   return -1;
 }
@@ -281,7 +280,6 @@ int receptor_disconnect(int fd) {
 
   if(frame.current_state == STATE_END){
     launch_disconnect_alarm(fd, 3);
-    write_disconnect();
     frame_t frame = read_control_frame(C_UA);
 
     if (frame.current_state == STATE_END) {

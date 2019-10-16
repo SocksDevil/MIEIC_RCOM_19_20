@@ -30,4 +30,5 @@ void launch_disconnect_alarm(int file_descriptor, int new_timeout) {
   fd = file_descriptor;
   signal(SIGALRM, write_disconnect);
   alarm(timeout);
+  write_disconnect();
 }
