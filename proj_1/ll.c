@@ -39,6 +39,14 @@ int llread(int fd, char *buffer) {
   return buffer_length;
 }
 
-int llclose(int fd) {
-  return close_connection(fd);
+int llclose(int fd, connection_role role) {
+  if(fd != -1) {
+    switch (role){
+      case TRANSMITTER:
+        return emitter_disconnect(fd);    
+      case RECEIVER:
+        return receptor_disconnect(fd);
+    }
+  }
+  return -1;
 }

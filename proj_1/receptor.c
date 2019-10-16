@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
   printf("Received %s from serial port\n", buffer);
   printf("Sucess!\n");
 
-  if(llclose(fd) != 0){
+  if(llclose(fd, RECEIVER) != 0){
     printf("Failed to close serial port!\n");
     exit(1);
   }

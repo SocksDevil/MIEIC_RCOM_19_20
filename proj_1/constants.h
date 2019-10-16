@@ -30,7 +30,9 @@ typedef enum {
   STATE_END = 5,
   STATE_DATA,
   STATE_BCC2,
-  STATE_ERROR
+  STATE_ERROR,
+  STATE_WRONG_SEQ_NUM,
+  STATE_WRONG_SEQ_END,
 } state_machine;
 
 #define MAX_SIZE 255 //TO-DO - Check actual value
@@ -49,9 +51,4 @@ typedef struct{
   unsigned int num_transmissions; /*Número de tentativas em caso defalha*/
 } link_layer;
 
-typedef struct{
-  state_machine current_state;
-  int current_frame;
-  unsigned char control_field;
-  unsigned char* received_frame;
-} frame_t;
+

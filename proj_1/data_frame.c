@@ -1,8 +1,10 @@
 #include "data_frame.h"
 #include "constants.h"
+#include "utils.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static unsigned char data_frame0[MAX_SIZE];
 static unsigned char data_frame1[MAX_SIZE];
@@ -57,4 +59,14 @@ void write_data_frame(){
         exit(1);
     }
     
+}
+
+void save_last_frame(unsigned char * received_frame, int sequence_number){
+  unsigned char * data_frame = sequence_number == 0 ? data_frame0 : data_frame1;
+  frame_cpy(data_frame, received_frame);
+}
+
+bool is_same_frame(unsigned char * received_frame, int sequence_number){
+  unsigned char *data_frame = sequence_number == 0 ? data_frame0 : data_frame1;
+  return frame_cmp(received_frame, data_frame) == 0;
 }
