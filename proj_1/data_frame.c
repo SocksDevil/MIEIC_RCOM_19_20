@@ -68,5 +68,5 @@ void save_last_frame(unsigned char * received_frame, int sequence_number){
 
 bool is_same_frame(unsigned char * received_frame, int sequence_number){
   unsigned char *data_frame = sequence_number == 0 ? data_frame0 : data_frame1;
-  return frame_cmp(received_frame,data_frame) == 0;
+  return frame_cmp(received_frame, data_frame) == 0;
 }
