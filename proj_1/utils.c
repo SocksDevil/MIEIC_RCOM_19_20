@@ -8,7 +8,7 @@
 #include "utils.h"
 #include "constants.h"
 
-int stuff_buffer(unsigned char ** buffer, int length) {
+int stuff_buffer(char ** buffer, int length) {
     // determine new length
     int new_length = 0;
     for (int i = 0; i < length; i++) {
@@ -17,8 +17,8 @@ int stuff_buffer(unsigned char ** buffer, int length) {
     }
 
     // create new buffer
-    unsigned char * new_buffer = (unsigned char*) malloc(new_length);
-    memset(new_buffer, 0, sizeof(unsigned char) * new_length);
+    char * new_buffer = (char*) malloc(new_length);
+    memset(new_buffer, 0, sizeof(char) * new_length);
 
     // fill new buffer
     for (int i = 0, ins_pos = 0; i < length; i++) {
@@ -43,35 +43,36 @@ int stuff_buffer(unsigned char ** buffer, int length) {
     return new_length;
 }
 
-int destuff_buffer(unsigned char ** buffer, int length) {
+int destuff_buffer(char * buffer, int length) {
     // determine new_length
     int new_length = length;
     for (int i = 0 ; i < length; i++) {
-        if ((*buffer)[i] == ESCAPE_CHAR) new_length--;
+        if (buffer[i] == ESCAPE_CHAR) new_length--;
     }
 
     // create new buffer
-    unsigned char * new_buffer = (unsigned char *) malloc(new_length);
-    memset(new_buffer, 0, sizeof(unsigned char) * new_length);
+    char * new_buffer = (char *) malloc(new_length);
+    memset(new_buffer, 0, sizeof(char) * new_length);
 
     // fill new buffer
     for (int i = 0, ins_pos = 0; i < length; i++, ins_pos++) {        
-        if ((*buffer)[i] == ESCAPE_CHAR) {
-            if ((*buffer)[i+1] == FLAG_SUBST) {
+        if (buffer[i] == ESCAPE_CHAR) {
+            if (buffer[i+1] == FLAG_SUBST) {
                 new_buffer[ins_pos] = FLAG;
             }
-            else if ((*buffer)[i+1] == ESCAPE_SUBST) {
+            else if (buffer[i+1] == ESCAPE_SUBST) {
                 new_buffer[ins_pos] = ESCAPE_CHAR;
             }
             i++;
         }
         else {
-            new_buffer[ins_pos] = (*buffer)[i];
+            new_buffer[ins_pos] = buffer[i];
         }
     }
 
+    memcpy(buffer, new_buffer, new_length);
+
     // assign new variables
-    *buffer = new_buffer;
     return new_length;
 }
 

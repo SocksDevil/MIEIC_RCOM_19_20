@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include "ll.h"
 #include "serial_driver.h"
+#include "utils.h"
 
 static link_layer layer;
 static bool sequence_number = true;
@@ -39,11 +40,10 @@ int llread(int fd, char *buffer) {
   int buffer_length = -1;
   for (int i = 0; i < MAX_TRIES && buffer_length == -1; i++) {
     buffer_length = read_data(fd, sequence_number, buffer);
-
   }
   if (buffer_length != -1)
     sequence_number = !sequence_number;
-  return buffer_length;
+  return destuff_buffer(buffer, buffer_length);
 }
 
 int llclose(int fd, connection_role role) {
