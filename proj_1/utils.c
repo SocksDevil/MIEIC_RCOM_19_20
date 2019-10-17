@@ -8,12 +8,12 @@
 #include "utils.h"
 #include "constants.h"
 
-int stuff_buffer(char ** buffer, int length) {
+int stuff_buffer(char * buffer, int length) {
     // determine new length
     int new_length = 0;
     for (int i = 0; i < length; i++) {
         new_length++;
-        if ((*buffer)[i] == FLAG || (*buffer)[i] == ESCAPE_CHAR) new_length++;
+        if (buffer[i] == FLAG || buffer[i] == ESCAPE_CHAR) new_length++;
     }
 
     // create new buffer
@@ -22,24 +22,24 @@ int stuff_buffer(char ** buffer, int length) {
 
     // fill new buffer
     for (int i = 0, ins_pos = 0; i < length; i++) {
-        if((*buffer)[i] == FLAG) {
+        if(buffer[i] == FLAG) {
             new_buffer[ins_pos] = ESCAPE_CHAR;
             new_buffer[ins_pos+1] = FLAG_SUBST;
             ins_pos++;
         }
-        else if((*buffer)[i] == ESCAPE_CHAR) {
+        else if(buffer[i] == ESCAPE_CHAR) {
             new_buffer[ins_pos] = ESCAPE_CHAR;
             new_buffer[ins_pos+1] = ESCAPE_SUBST;
             ins_pos++;
         }
         else {
-            new_buffer[ins_pos] = (*buffer)[i];
+            new_buffer[ins_pos] = buffer[i];
         }
         ins_pos++;
     }
 
+    memcpy(buffer, new_buffer, new_length);
     // assign new variables
-    *buffer = new_buffer;
     return new_length;
 }
 
@@ -51,7 +51,7 @@ int destuff_buffer(char * buffer, int length) {
     }
 
     // create new buffer
-    char * new_buffer = (char *) malloc(new_length);
+    char new_buffer[new_length];
     memset(new_buffer, 0, sizeof(char) * new_length);
 
     // fill new buffer

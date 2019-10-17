@@ -336,7 +336,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
 }
 
 int write_data(int fd, int sequence_number, char *buffer, int length) {
-  stuff_buffer(&buffer, length);
+  stuff_buffer(buffer, length);
   int written_bytes = prepare_data_frame(sequence_number, buffer, length, fd);
   if (written_bytes == -1)
     return -1;

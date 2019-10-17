@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-int stuff_buffer(char **buffer, int length);
+int stuff_buffer(char *buffer, int length);
 
 int destuff_buffer(char *buffer, int length);
 
