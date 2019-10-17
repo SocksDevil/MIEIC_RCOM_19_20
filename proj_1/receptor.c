@@ -5,6 +5,7 @@
 #include "constants.h"
 #include "utils.h"
 #include "ll.h"
+#include "app_layer.h"
 
 
 int main(int argc, char **argv) {
@@ -16,11 +17,12 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  char buffer[MAX_SIZE];
+  if (read_file(fd) == -1) {
+    printf("Error reading file\n");
+    return -1;
+  }
 
-  llread(fd, buffer);
-  printf("Received %s from serial port\n", buffer);
-  printf("Sucess!\n");
+  printf("Received file from serial port\n");
 
   if(llclose(fd, RECEIVER) != 0){
     printf("Failed to close serial port!\n");
