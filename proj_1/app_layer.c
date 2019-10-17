@@ -285,12 +285,16 @@ int read_file(int fd) {
         return -1;
     }
 
+    printf("Read start control packet\n");
+
     // interpret start packet
     start_info = parse_ctrl_packet(buffer, count);
     if (start_info.filename == NULL) {
         printf("Invalid start control packet\n");
         return -1;
     }
+
+    printf("Interpreted start control packet\n");
 
     // open new file
     int new_fd;
@@ -321,6 +325,8 @@ int read_file(int fd) {
             return -1;
         }
     }
+    
+    printf("Read end control packet\n");
 
     // interpret final packet
     end_info = parse_ctrl_packet(buffer, count);
@@ -328,6 +334,7 @@ int read_file(int fd) {
         printf("Invalid end control packet\n");
         return -1;
     }
+    printf("Interpreted end control packet\n");
 
     if(close(new_fd) == -1) {
         perror("close");

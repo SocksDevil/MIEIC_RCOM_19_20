@@ -315,7 +315,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
   int data_size;
   if (frame.current_state != STATE_ERROR &&
       (data_size = interpreter(frame.received_frame, buffer)) != -1) {
-    printf("Receiver ready!\n");
+    printf("Received frame!\n");
     send_non_info_frame(fd, sequence_number == 0 ? C_RR_0 : C_RR_1);
     save_last_frame(received_frame, sequence_number);
   }
