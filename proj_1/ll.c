@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include "ll.h"
 #include "serial_driver.h"
+#include "constants.h"
 
 static link_layer layer;
 static bool sequence_number = true;
@@ -29,6 +30,13 @@ int llwrite(int fd, char *buffer, int length) {
   int written_bytes = -1;
   for (int i = 0; i < MAX_TRIES && written_bytes == -1; i++) {
     written_bytes = write_data(fd, sequence_number, buffer, length);
+  }
+  if(written_bytes == DISC_ON_READ){
+    if (receptor_disconnect(fd) != 0){
+      return -1;
+    } 
+    return DISC_ON_READ;
+    
   }
   if (written_bytes != -1)
     sequence_number = !sequence_number;

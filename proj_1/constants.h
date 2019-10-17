@@ -33,13 +33,15 @@ typedef enum {
   STATE_ERROR,
   STATE_WRONG_SEQ_NUM,
   STATE_WRONG_SEQ_END,
+  STATE_DISC,
+  STATE_DISC_END
 } state_machine;
 
 #define MAX_SIZE 255 //TO-DO - Check actual value
 
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define MAX_TRIES 5
-
+#define DISC_ON_READ -10
 typedef enum{
     TRANSMITTER,
     RECEIVER    

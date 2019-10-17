@@ -21,6 +21,8 @@ int read_data(int fd, int sequence_number, char *buffer);
 
 int write_data(int fd, int sequence_number, char *buffer, int length);
 
+int receptor_send_disconnect(int fd);
+
 struct Frame {
   state_machine current_state;
   int current_frame;
@@ -29,4 +31,3 @@ struct Frame {
   bool sequence_number;
   control_func control_verification;
 };
-
