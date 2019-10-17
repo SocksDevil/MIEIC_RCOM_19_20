@@ -125,7 +125,7 @@ int send_data_packet(int fd, app_data_packet * packet) {
 
     // send buffer
     if (llwrite(fd, buffer, buffer_size) == -1) {
-        perror("llwrite");
+        printf("Error in llwrite\n");
         return -1;
     }
 
@@ -158,7 +158,7 @@ int send_file(char * filename, int fd) {
         app_data_packet data_packet = prepare_data_packet(CTRL_DATA, buff, n, seq_number++);
 
         if (send_data_packet(fd, &data_packet) == -1) {
-            printf("Error sending data packet nº%d\n", seq_number-1);
+            printf("Error sending data packet nº %d\n", seq_number-1);
             return -1;
         }
 

@@ -11,7 +11,7 @@ int interpreter(unsigned char *frame, char *buffer) {
       break;
   }
 
-  char bcc2 = frame[flag_i - 1];
+  unsigned char bcc2 = frame[flag_i - 1];
 
   int new_size = 0;
   for (int i = 4; i < flag_i - 1; i++) {
@@ -19,7 +19,7 @@ int interpreter(unsigned char *frame, char *buffer) {
     new_size++;
   }
   
-  char xor = buffer[0];
+  unsigned char xor = (unsigned char) buffer[0];
   for (int i = 1; i < new_size; i++) {
     xor ^= buffer[i];
   }

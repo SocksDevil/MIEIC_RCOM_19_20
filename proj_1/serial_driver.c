@@ -339,6 +339,7 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
   int written_bytes = prepare_data_frame(sequence_number, buffer, length, fd);
   if (written_bytes == -1)
     return -1;
+
   (void) signal(SIGALRM, write_data_frame);
   write_data_frame();
   unsigned char received_frame[MAX_SIZE];
