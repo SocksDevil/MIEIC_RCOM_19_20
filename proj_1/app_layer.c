@@ -319,6 +319,18 @@ int read_file(int fd) {
             break;
         }
 
+        printf("First print\n");
+        for (int i = 0; i < count; i++) {
+            printf("%2x ", buffer[i]);
+        }
+        printf("\n\n\n");
+
+        printf("Second print\n");
+        for (int i = 0; i < count+1; i++) {
+            printf("%2x ", buffer[i]);
+        }
+        printf("\n");
+
         // interpret data
         if (parse_data_packet(buffer, count, new_fd, seq_number++ % UCHAR_MAX) == -1) {
             printf("Error parsing data packet\n");
