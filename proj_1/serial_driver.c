@@ -237,7 +237,7 @@ int emitter_disconnect(int fd) {
   if (frame.current_state != STATE_END) {
     return -1;
   }
-  printf("Disconnecting");
+  printf("Disconnecting\n");
   send_non_info_frame(fd, C_UA);
   return close_connection(fd);
 }
@@ -274,17 +274,21 @@ int acknowledge_connection() {
 }
 
 int receptor_disconnect(int fd) {
-  frame_t frame = read_control_frame(C_DISC);
-
-  if(frame.current_state == STATE_END){
-    launch_disconnect_alarm(fd, 3);
-    frame_t frame = read_control_frame(C_UA);
-
-    if (frame.current_state == STATE_END) {
-      return close_connection(fd);
-    }
+  frame_t disc_frame = read_control_frame(C_DISC);
+  if(disc_frame.current_state != STATE_END) {
+    printf("Received wrong disconnect frame\n");
+    return -1;
   }
-  return -1;
+
+  launch_disconnect_alarm(fd, 3);
+  frame_t ua_frame = read_control_frame(C_UA);
+
+  if(ua_frame.current_state != STATE_END) {
+    printf("Received wrong UA disconnect frame\n");
+    return -1;
+  }
+
+  return close_connection(fd);
 }
 
 int read_data(int fd, int sequence_number, char *buffer) {
