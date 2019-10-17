@@ -5,20 +5,19 @@
 
 int interpreter(unsigned char *frame, char *buffer) {
 
-  int size = 1;
-  for (;; size++) {
-    if (frame[size] == FLAG)
+  int flag_i = 1;
+  for (;; flag_i++) {
+    if (frame[flag_i] == FLAG)
       break;
   }
 
-  char bcc2 = frame[size - 1];
+  char bcc2 = frame[flag_i - 1];
 
   int new_size = 0;
-  for (int i = 4; i < size - 1; i++) {
+  for (int i = 4; i < flag_i - 1; i++) {
     buffer[new_size] = frame[i];
     new_size++;
   }
-  new_size++;
   
   char xor = buffer[0];
   for (int i = 1; i < new_size; i++) {
