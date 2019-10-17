@@ -19,8 +19,6 @@ static int send_cnt = 0;
 static int fd;
 static int timeout;
 
-static bool to_resend = false;
-
 bool check_protection_field(
   frame_t *frame) {
   return frame->received_frame[frame->current_frame] ==
@@ -236,7 +234,7 @@ int emitter_disconnect(int fd) {
 
   frame_t frame = read_control_frame(C_DISC);
 
-  if (frame.current_state == STATE_END) {
+  if (frame.current_state != STATE_END) {
     return -1;
   }
   printf("Disconnecting");
@@ -338,34 +336,28 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
   if (written_bytes == -1)
     return -1;
   (void) signal(SIGALRM, write_data_frame);
-  do {
-    write_data_frame();
-    unsigned char received_frame[MAX_SIZE];
+  write_data_frame();
+  unsigned char received_frame[MAX_SIZE];
 
-    frame_t frame = {
-      .current_state = STATE_FLAG_I,
-      .current_frame = 0,
-      .received_frame = received_frame,
-      .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
-      .sequence_number = sequence_number,
-      .control_verification = check_data_ack};
-    for (;
-         frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
-         frame.current_frame++) {
-      read(fd, &frame.received_frame[frame.current_frame], 1);
-      update_state(&frame);
-    }
-    printf("%d\n", frame.current_state);
-    if (frame.current_state == STATE_END) {
-      printf("Received receiver ready!\n");
-      alarm(0);
-      to_resend = false;
-    }
-    else {
-      printf("Receiver rejected!\n");
-      to_resend = true;
-    }
-  } while (to_resend);
-
+  frame_t frame = {
+    .current_state = STATE_FLAG_I,
+    .current_frame = 0,
+    .received_frame = received_frame,
+    .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
+    .sequence_number = sequence_number,
+    .control_verification = check_data_ack};
+  for (;
+        frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
+        frame.current_frame++) {
+    read(fd, &frame.received_frame[frame.current_frame], 1);
+    update_state(&frame);
+  }
+  printf("%d\n", frame.current_state);
+  alarm(0);
+  if (frame.current_state != STATE_END) {
+    printf("Receiver rejected!\n");
+    return -1;
+  }
+  printf("Received receiver ready!\n");
   return written_bytes;
 }

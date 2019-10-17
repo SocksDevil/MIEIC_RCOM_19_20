@@ -38,6 +38,7 @@ typedef enum {
 #define MAX_SIZE 255 //TO-DO - Check actual value
 
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
+#define MAX_TRIES 5
 
 typedef enum{
     TRANSMITTER,
