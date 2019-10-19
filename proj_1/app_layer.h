@@ -9,7 +9,7 @@
 #define TLV_SIZE_T 0
 #define TLV_NAME_T 1
 
-#define DATA_BYTES 500
+#define DATA_BYTES 200
 #define MAX_FRAME_SIZE ((1 << 16) - 1 + 4) // USHORT_MAX + 4
 
 typedef enum{

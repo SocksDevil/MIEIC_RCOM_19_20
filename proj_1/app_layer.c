@@ -125,7 +125,7 @@ int send_data_packet(int fd, app_data_packet * packet) {
 
     // send buffer
     if (llwrite(fd, buffer, buffer_size) == -1) {
-        perror("llwrite");
+        printf("Error in llwrite\n");
         return -1;
     }
 
@@ -158,7 +158,7 @@ int send_file(char * filename, int fd) {
         app_data_packet data_packet = prepare_data_packet(CTRL_DATA, buff, n, seq_number++);
 
         if (send_data_packet(fd, &data_packet) == -1) {
-            printf("Error sending data packet nº%d\n", seq_number-1);
+            printf("Error sending data packet nº %d\n", seq_number-1);
             return -1;
         }
 
@@ -285,12 +285,16 @@ int read_file(int fd) {
         return -1;
     }
 
+    printf("Read start control packet\n");
+
     // interpret start packet
     start_info = parse_ctrl_packet(buffer, count);
     if (start_info.filename == NULL) {
         printf("Invalid start control packet\n");
         return -1;
     }
+
+    printf("Interpreted start control packet\n");
 
     // open new file
     int new_fd;
@@ -315,12 +319,26 @@ int read_file(int fd) {
             break;
         }
 
+        printf("First print\n");
+        for (int i = 0; i < count; i++) {
+            printf("%2x ", buffer[i]);
+        }
+        printf("\n\n\n");
+
+        printf("Second print\n");
+        for (int i = 0; i < count+1; i++) {
+            printf("%2x ", buffer[i]);
+        }
+        printf("\n");
+
         // interpret data
         if (parse_data_packet(buffer, count, new_fd, seq_number++ % UCHAR_MAX) == -1) {
             printf("Error parsing data packet\n");
             return -1;
         }
     }
+    
+    printf("Read end control packet\n");
 
     // interpret final packet
     end_info = parse_ctrl_packet(buffer, count);
@@ -328,6 +346,7 @@ int read_file(int fd) {
         printf("Invalid end control packet\n");
         return -1;
     }
+    printf("Interpreted end control packet\n");
 
     if(close(new_fd) == -1) {
         perror("close");
