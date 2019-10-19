@@ -308,13 +308,13 @@ int read_file(int fd) {
     bool reached_end = false;
     while(!reached_end) {
 
-        if ((count = (unsigned short) llread(fd,buffer)) <= 0) {
+        if ((count = (unsigned short) llread(fd,buffer)) == (unsigned short) -1) {
             printf("Reached end of input and did not find control end\n");
             return -1;
         }
 
         // reached final packet
-        if (buffer[0] == CTRL_END) {
+        if (buffer[0] == CTRL_END || count == (unsigned short)DISC_ON_READ) {
             reached_end = true;
             break;
         }

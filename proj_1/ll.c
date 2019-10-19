@@ -32,13 +32,6 @@ int llwrite(int fd, char *buffer, int length) {
   for (int i = 0; i < MAX_TRIES && written_bytes == -1; i++) {
     written_bytes = write_data(fd, sequence_number, buffer, length);
   }
-  if(written_bytes == DISC_ON_READ){
-    if (receptor_disconnect(fd) != 0){
-      return -1;
-    } 
-    return DISC_ON_READ;
-    
-  }
   if (written_bytes != -1)
     sequence_number = !sequence_number;
   return written_bytes;
@@ -49,6 +42,13 @@ int llread(int fd, char *buffer) {
   for (int i = 0; i < MAX_TRIES && buffer_length == -1; i++) {
     buffer_length = read_data(fd, sequence_number, buffer);
   }
+  if (buffer_length== DISC_ON_READ) {
+    if (receptor_disconnect(fd) != 0) {
+      return -1;
+    }
+    return DISC_ON_READ;
+  }
+  
   if (buffer_length != -1)
     sequence_number = !sequence_number;
   return destuff_buffer(buffer, buffer_length);
