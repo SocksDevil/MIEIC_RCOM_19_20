@@ -16,7 +16,6 @@
 #include "set_frame.h"
 
 static struct termios oldtio;
-//static int send_cnt = 0;
 static int fd;
 static int timeout;
 
@@ -40,30 +39,6 @@ bool is_info_frame(frame_t *frame) {
   return frame->control_field == C_RI_0 ||
          frame->control_field == C_RI_1;
 }
-
-/*
-void send_set_up_frame() {
-  send_cnt++;
-  printf("Sending message. Attempt %d\n", send_cnt);
-  unsigned char SET[5];
-  SET[0] = FLAG;
-  SET[1] = A;
-  SET[2] = C_SET;
-  SET[3] = SET[1] ^ SET[2];
-  SET[4] = FLAG;
-
-  write(fd, SET, 5);
-
-  // only try to send msg 3 times
-  if (send_cnt == SEND_ATTEMPTS + 1) {
-    printf("Could not send message. Exiting program.\n");
-    exit(1);
-  }
-
-  alarm(timeout);
-}
-
-*/
 
 void check_control_field(frame_t *frame) {
   if (frame->received_frame[frame->current_frame] == frame->control_field) {

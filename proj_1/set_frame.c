@@ -1,5 +1,8 @@
 #include "set_frame.h"
 #include "constants.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 static int current_attempt = 0;
 static int timeout = 0;

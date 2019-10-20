@@ -1,8 +1,8 @@
 C = gcc
 CFLAGS = -Wall -Werror -Wextra
 
-SRC_EM = emitter.c serial_driver.c ll.c utils.c app_layer.c llinterpretation.c data_frame.c disconnect_frame.c
-SRC_REC = receptor.c serial_driver.c ll.c utils.c app_layer.c llinterpretation.c data_frame.c disconnect_frame.c
+SRC_EM = emitter.c serial_driver.c ll.c utils.c app_layer.c llinterpretation.c data_frame.c disconnect_frame.c set_frame.c
+SRC_REC = receptor.c serial_driver.c ll.c utils.c app_layer.c llinterpretation.c data_frame.c disconnect_frame.c set_frame.c
 OBJ_EM = $(SRC_EM:.c=.o)
 OBJ_REC = $(SRC_REC:.c=.o)
 EXEC1 = receptor
