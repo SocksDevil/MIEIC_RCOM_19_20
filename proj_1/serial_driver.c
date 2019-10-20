@@ -346,7 +346,6 @@ int read_data(int fd, int sequence_number, char *buffer) {
       send_non_info_frame(fd, opposite_seq_num == 0 ? C_REJ_0 : C_REJ_1);
     return -1;
   }else if(frame.current_state == STATE_DISC){
-    send_non_info_frame(fd, C_UA);
     return DISC_ON_READ;
   }
   return data_size;

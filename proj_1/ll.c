@@ -43,7 +43,7 @@ int llread(int fd, char *buffer) {
     buffer_length = read_data(fd, sequence_number, buffer);
   }
   if (buffer_length== DISC_ON_READ) {
-    if (receptor_disconnect(fd) != 0) {
+    if (receptor_send_disconnect(fd) != 0) {
       return -1;
     }
     return DISC_ON_READ;
