@@ -41,7 +41,7 @@ bool is_info_frame(frame_t *frame) {
 }
 
 
-void send_frame() {
+void send_set_up_frame() {
   send_cnt++;
   printf("Sending message. Attempt %d\n", send_cnt);
   unsigned char SET[5];
@@ -255,8 +255,8 @@ int emitter_disconnect(int fd) {
 int set_connection(link_layer layer) {
   timeout = layer.timeout;
   set_timeout(timeout);
-  (void) signal(SIGALRM, send_frame);
-  send_frame();
+  (void) signal(SIGALRM, send_set_up_frame);
+  send_set_up_frame();
   alarm(timeout);
   frame_t frame = read_control_frame(C_UA);
   if(frame.current_state == STATE_END)
