@@ -17,7 +17,6 @@ void write_disconnect() {
     send_non_info_frame(fd, C_DISC);
     alarm(timeout);
     current_attempt++;
-    printf("Written disconnect attempts %d\n", current_attempt);
   }else{
       printf("Failed to send disconnect, exiting\n");
       exit(1);

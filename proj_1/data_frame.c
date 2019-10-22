@@ -20,7 +20,6 @@ int prepare_data_frame(int sequence_number, char *buffer, int length, int file_d
   current_attempt = 0;
 
   if (length + 6 <= MAX_SIZE) {
-    //unsigned char data_frame[MAX_SIZE];
     int index = 4;
     data_frame[0] = FLAG;
     data_frame[1] = A;
@@ -52,7 +51,6 @@ void write_data_frame(){
     if(current_attempt < num_attempts){
         if(fd != -1){
             current_attempt++;
-            printf("Sending data frame: attempt %d\n", current_attempt);
 
             write(fd, current_sequence_number == 0 ? data_frame0 : data_frame1, frame_size);
             alarm(timeout);

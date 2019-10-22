@@ -43,7 +43,6 @@ bool is_info_frame(frame_t *frame) {
 
 void send_set_up_frame() {
   send_cnt++;
-  printf("Sending message. Attempt %d\n", send_cnt);
   unsigned char SET[5];
   SET[0] = FLAG;
   SET[1] = A;
@@ -53,7 +52,7 @@ void send_set_up_frame() {
 
   write(fd, SET, 5);
 
-  // only try to send msg 3 times
+  // only try to send msg SEND_ATTEMPTS times
   if (send_cnt == SEND_ATTEMPTS + 1) {
     printf("Could not send message. Exiting program.\n");
     exit(1);
@@ -279,7 +278,6 @@ int acknowledge_connection() {
     sending_set[2] = C_UA;
     sending_set[3] = sending_set[1] ^ sending_set[2];
 
-    printf("Success, sending UA\n");
     write(fd, sending_set, 5);
     return 0;
   }
@@ -292,6 +290,7 @@ int receptor_disconnect(int fd) {
     printf("Received wrong disconnect frame\n");
     return -1;
   }
+  printf("Disconnecting\n");
   return receptor_send_disconnect(fd);
 }
 
@@ -335,7 +334,6 @@ int read_data(int fd, int sequence_number, char *buffer) {
 
   if (frame.current_state != STATE_ERROR &&
       (data_size = interpreter(frame.received_frame, buffer, data_size)) != -1) {
-    printf("Received frame!\n");
     send_non_info_frame(fd, sequence_number == 0 ? C_RR_0 : C_RR_1);
     save_last_frame(received_frame, sequence_number);
   }
@@ -385,6 +383,5 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
     printf("Receiver rejected!\n");
     return -1;
   }
-  printf("Received receiver ready!\n\n");
   return written_bytes;
 }

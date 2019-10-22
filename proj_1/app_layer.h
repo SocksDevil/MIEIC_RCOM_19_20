@@ -53,6 +53,11 @@ typedef struct{
 } al_state_machine;
 */
 
+typedef enum {
+    PROGRESS_BAR_SEND,
+    PROGRESS_BAR_RECEIVE
+} al_progress_bar;
+
 int send_file(char * filename, int fd);
 
 int read_file(int fd, char * filename);

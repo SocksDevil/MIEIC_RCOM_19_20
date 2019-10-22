@@ -129,11 +129,29 @@ int send_data_packet(int fd, app_data_packet * packet) {
         return -1;
     }
 
-    printf("Sending packet: sequence number %d\n", packet->seq_n);
-
     free(buffer);
 
     return 0;
+}
+
+void display_progress_bar(al_progress_bar type, int progress) {
+
+    char * msg;
+    switch (type) {
+        case PROGRESS_BAR_RECEIVE:
+            msg = "Receiving file: ";
+            break;
+        case PROGRESS_BAR_SEND:
+            msg = "Sending file: ";
+            break;
+        default:
+            msg = "";
+    }
+    
+    printf("\r%s%d%%", msg, progress);
+    fflush(stdout);
+
+    if (progress == 100) printf("\n");
 }
 
 int send_file(char * filename, int fd) {
@@ -145,6 +163,7 @@ int send_file(char * filename, int fd) {
     }
 
     long filesize = file_size(filename);
+    unsigned long total_read = 0;
 
     // start ctrl packet
     app_ctrl_packet start_packet = prepare_ctrl_packet(CTRL_START, filename, filesize);
@@ -163,6 +182,9 @@ int send_file(char * filename, int fd) {
             printf("Error sending data packet nº %d\n", seq_number-1);
             return -1;
         }
+
+        total_read += n;
+        display_progress_bar(PROGRESS_BAR_SEND, (int)(total_read * 1.0 / filesize * 100));
 
         free_data_packet(&data_packet);
     }
@@ -236,8 +258,6 @@ int parse_data_packet(char * buffer, unsigned short size, int fd, uint8_t seq_nu
         return -1;
     }
 
-    printf("Current sequence_number: %u\n", (uint8_t) buffer[1]);
-
     if ((uint8_t)buffer[1] != seq_number) {
         printf("Wrong sequence number. Got %u, expected %u\n", (uint8_t) buffer[1], seq_number);
         return -1;
@@ -249,7 +269,7 @@ int parse_data_packet(char * buffer, unsigned short size, int fd, uint8_t seq_nu
         return -1;
     }
 
-    for (unsigned short i = 4; i < length+4; i++) {
+    for (unsigned short i = 4; i < size; i++) {
         if (write(fd, &buffer[i], 1) == -1) {
             perror("write data");
             return -1;
@@ -282,6 +302,7 @@ int read_file(int fd, char * filename) {
     char buffer[MAX_FRAME_SIZE];
     unsigned short count;
     ctrl_info start_info, end_info;
+    unsigned long total_read = 0;
 
     // read start control packet
     if ((count = (unsigned short) llread(fd, buffer)) <= 0) {
@@ -289,16 +310,12 @@ int read_file(int fd, char * filename) {
         return -1;
     }
 
-    printf("Read start control packet\n");
-
     // interpret start packet
     start_info = parse_ctrl_packet(buffer, count);
     if (start_info.filename == NULL) {
         printf("Invalid start control packet\n");
         return -1;
     }
-
-    printf("Interpreted start control packet\n");
 
     // open new file
     int new_fd;
@@ -311,6 +328,8 @@ int read_file(int fd, char * filename) {
     uint8_t seq_number = 0;
     while(buffer[0] != CTRL_END && count != (unsigned short) DISC_ON_READ){
 
+        display_progress_bar(PROGRESS_BAR_RECEIVE, (int)(total_read * 1.0 / start_info.filesize * 100));
+
         if ((count = (unsigned short) llread(fd,buffer)) == (unsigned short) -1) {
             printf("Reached end of input and did not find control end\n");
             return -1;
@@ -321,14 +340,14 @@ int read_file(int fd, char * filename) {
             printf("Error parsing data packet\n");
             return -1;
         }
-
+        
+        total_read += count-4;
     }
+    
     if(count == (unsigned short)DISC_ON_READ){
         printf("Read a disconnect on read\n");
         return -1;
     }
-
-    printf("Read end control packet\n");
 
     // interpret final packet
     end_info = parse_ctrl_packet(buffer, count);
@@ -336,7 +355,6 @@ int read_file(int fd, char * filename) {
         printf("Invalid end control packet\n");
         return -1;
     }
-    printf("Interpreted end control packet\n");
 
     if(close(new_fd) == -1) {
         perror("close");
