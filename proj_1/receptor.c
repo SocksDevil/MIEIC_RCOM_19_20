@@ -17,12 +17,13 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (read_file(fd) == -1) {
+  char filename[MAX_FILENAME_SIZE];
+  if (read_file(fd, filename) == -1) {
     printf("Error reading file\n");
     return -1;
   }
 
-  printf("Received file from serial port\n");
+  printf("Received file %s from serial port\n", filename);
 
   if(llclose(fd, RECEIVER) != 0){
     printf("Failed to close serial port!\n");

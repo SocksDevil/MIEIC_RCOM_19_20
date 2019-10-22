@@ -272,7 +272,7 @@ bool matching_ctrl_packets(ctrl_info start, ctrl_info end) {
     return true;    
 }
 
-int read_file(int fd) {
+int read_file(int fd, char * filename) {
     
     // TODO check the buffer size
     char buffer[MAX_FRAME_SIZE];
@@ -355,6 +355,8 @@ int read_file(int fd) {
         printf("Error validating control packets\n");
         return -1;
     }
+
+    memcpy(filename, start_info.filename, strlen(start_info.filename)+1);
 
     free(start_info.filename);
     free(end_info.filename);

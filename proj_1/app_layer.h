@@ -12,6 +12,8 @@
 #define DATA_BYTES 200
 #define MAX_FRAME_SIZE ((1 << 16) - 1 + 4) // USHORT_MAX + 4
 
+#define MAX_FILENAME_SIZE 1024
+
 typedef enum{
     CTRL_DATA = 1,
     CTRL_START = 2,
@@ -53,4 +55,4 @@ typedef struct{
 
 int send_file(char * filename, int fd);
 
-int read_file(int fd);
+int read_file(int fd, char * filename);
