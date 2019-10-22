@@ -199,7 +199,7 @@ ctrl_info parse_ctrl_packet(char * buffer, unsigned short size) {
     while(i < size) {
         uint8_t type = (uint8_t) buffer[i++];
         uint8_t length = (uint8_t) buffer[i++];
-        
+
         switch(type) {
             case TLV_SIZE_T:
                 for (int j = 0; j < length; j++)
@@ -234,8 +234,8 @@ int parse_data_packet(char * buffer, unsigned short size, int fd, uint8_t seq_nu
         return -1;
     }
 
-    if ((buffer[1]) != seq_number) {
-        printf("Wrong sequence number. Got %u, expected %u\n", buffer[1], seq_number);
+    if ((uint8_t)buffer[1] != seq_number) {
+        printf("Wrong sequence number. Got %u, expected %u\n", (uint8_t) buffer[1], seq_number);
         return -1;
     }
 
@@ -244,7 +244,7 @@ int parse_data_packet(char * buffer, unsigned short size, int fd, uint8_t seq_nu
         printf("Invalid data packet: unexpected file size. Expected %d, got %d\n", size, length+4);
         return -1;
     }
-    
+
     for (unsigned short i = 4; i < length+4; i++) {
         if (write(fd, &buffer[i], 1) == -1) {
             perror("write data");
@@ -269,11 +269,11 @@ bool matching_ctrl_packets(ctrl_info start, ctrl_info end) {
         return false;
     }
 
-    return true;    
+    return true;
 }
 
 int read_file(int fd, char * filename) {
-    
+
     // TODO check the buffer size
     char buffer[MAX_FRAME_SIZE];
     unsigned short count;
@@ -312,19 +312,6 @@ int read_file(int fd, char * filename) {
             return -1;
         }
 
-
-        printf("First print\n");
-        for (int i = 0; i < count; i++) {
-            printf("%2x ", buffer[i]);
-        }
-        printf("\n\n\n");
-
-        printf("Second print\n");
-        for (int i = 0; i < count+1; i++) {
-            printf("%2x ", buffer[i]);
-        }
-        printf("\n");
-
         // interpret data
         if (buffer[0] == CTRL_DATA && parse_data_packet(buffer, count, new_fd, seq_number++ % UCHAR_MAX) == -1) {
             printf("Error parsing data packet\n");
@@ -335,7 +322,7 @@ int read_file(int fd, char * filename) {
         printf("Read a disconnect on read\n");
         return -1;
     }
-    
+
     printf("Read end control packet\n");
 
     // interpret final packet

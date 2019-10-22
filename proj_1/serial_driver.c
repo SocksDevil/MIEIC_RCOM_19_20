@@ -149,9 +149,11 @@ void update_state(
   frame_t *frame) {
   switch (frame->current_state) {
     case STATE_FLAG_I:
-      if (frame->received_frame[frame->current_frame] == FLAG)
+      if (frame->received_frame[frame->current_frame] == FLAG){
         frame->current_state = STATE_A;
-
+        break;
+      }
+      frame->current_frame--;
       break;
     case STATE_A:
 
@@ -161,6 +163,7 @@ void update_state(
       }
       else if (frame->received_frame[frame->current_frame] != FLAG) {
         frame->current_state = STATE_FLAG_I;
+        frame->current_frame = STATE_FLAG_I;
         break;
       }
       frame->current_frame--;
@@ -202,7 +205,7 @@ void update_state(
           frame->current_state = STATE_ERROR;
         }
       }
-      break;  
+      break;
     default:
       break;
   }
@@ -260,7 +263,7 @@ int set_connection(link_layer layer) {
   alarm(timeout);
   frame_t frame = read_control_frame(C_UA);
   if(frame.current_state == STATE_END)
-    return 0;  
+    return 0;
   return -1;
 }
 
@@ -324,6 +327,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
        frame.current_frame++) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
+    // printf("value: %2x, current_state: %d\n", frame.received_frame[frame.current_frame], frame.current_state);
   }
 
   destuff_buffer(frame.received_frame, frame.current_frame);
