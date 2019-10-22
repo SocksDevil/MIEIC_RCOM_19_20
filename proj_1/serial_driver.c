@@ -327,6 +327,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
        frame.current_frame++) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
+    // printf("value: %2x, current_state: %d\n", frame.received_frame[frame.current_frame], frame.current_state);
   }
 
   int data_size;
