@@ -233,9 +233,9 @@ int emitter_disconnect(int fd) {
 int set_connection(link_layer layer) {
   timeout = layer.timeout;
   set_timeout(timeout);//todo see what depends on this
-  prepare_set_frame(fd,timeout,SEND_ATTEMPTS);
-  (void) signal(SIGALRM, write_SET);
-  write_SET();
+  write_set_frame(fd,timeout,SEND_ATTEMPTS);
+  
+  
 
   frame_t frame = read_control_frame(C_UA);
   if(frame.current_state == STATE_END)
