@@ -21,7 +21,7 @@ static int timeout;
 
 bool check_protection_field(
   frame_t *frame) {
-  return frame->received_frame[frame->current_frame] ==
+  return frame->received_frame[STATE_BCC] ==
          (frame->control_field ^ frame->received_frame[STATE_A]);
 }
 
@@ -41,7 +41,7 @@ bool is_info_frame(frame_t *frame) {
 }
 
 
-void send_frame() {
+void send_set_up_frame() {
   send_cnt++;
   printf("Sending message. Attempt %d\n", send_cnt);
   unsigned char SET[5];
@@ -76,7 +76,7 @@ void check_control_field(frame_t *frame) {
   }
 }
 
-void check_data_ack(frame_t *frame) {
+void check_data_frame(frame_t *frame) {
   if (frame->received_frame[frame->current_frame] ==
       (frame->sequence_number == 0 ? C_REJ_0 : C_REJ_1)) {
     frame->current_state = STATE_ERROR;
@@ -193,6 +193,16 @@ void update_state(
         frame->current_state = STATE_FLAG_I;
         frame->current_frame = -1;
       }
+      break;
+    case STATE_DISC:
+      if(frame->received_frame[frame->current_frame] == FLAG){
+        if(check_protection_field(frame)){
+          frame->current_state = STATE_DISC_END;
+        } else{
+          frame->current_state = STATE_ERROR;
+        }
+      }
+      break;  
     default:
       break;
   }
@@ -245,8 +255,8 @@ int emitter_disconnect(int fd) {
 int set_connection(link_layer layer) {
   timeout = layer.timeout;
   set_timeout(timeout);
-  (void) signal(SIGALRM, send_frame);
-  send_frame();
+  (void) signal(SIGALRM, send_set_up_frame);
+  send_set_up_frame();
   alarm(timeout);
   frame_t frame = read_control_frame(C_UA);
   if(frame.current_state == STATE_END)
@@ -279,11 +289,14 @@ int receptor_disconnect(int fd) {
     printf("Received wrong disconnect frame\n");
     return -1;
   }
+  return receptor_send_disconnect(fd);
+}
 
+int receptor_send_disconnect(int fd){
   launch_disconnect_alarm(fd, 3);
   frame_t ua_frame = read_control_frame(C_UA);
 
-  if(ua_frame.current_state != STATE_END) {
+  if (ua_frame.current_state != STATE_END) {
     printf("Received wrong UA disconnect frame\n");
     return -1;
   }
@@ -300,13 +313,14 @@ int read_data(int fd, int sequence_number, char *buffer) {
     .received_frame = received_frame,
     .control_field = sequence_number == 0 ? C_RI_0 : C_RI_1,
     .sequence_number = sequence_number,
-    .control_verification = check_data_ack};
+    .control_verification = check_data_frame};
 
   for (;
        frame.current_frame < MAX_SIZE &&
        frame.current_state != STATE_END &&
        frame.current_state != STATE_ERROR &&
-       frame.current_state != STATE_WRONG_SEQ_END;
+       frame.current_state != STATE_WRONG_SEQ_END &&
+       frame.current_state != STATE_DISC_END;
        frame.current_frame++) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
@@ -331,6 +345,8 @@ int read_data(int fd, int sequence_number, char *buffer) {
     else
       send_non_info_frame(fd, opposite_seq_num == 0 ? C_REJ_0 : C_REJ_1);
     return -1;
+  }else if(frame.current_state == STATE_DISC){
+    return DISC_ON_READ;
   }
   return data_size;
 }
@@ -351,7 +367,7 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
     .received_frame = received_frame,
     .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
     .sequence_number = sequence_number,
-    .control_verification = check_data_ack};
+    .control_verification = check_data_frame};
   for (;
         frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
         frame.current_frame++) {

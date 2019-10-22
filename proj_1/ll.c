@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include "ll.h"
 #include "serial_driver.h"
+#include "constants.h"
 #include "utils.h"
 
 static link_layer layer;
@@ -41,6 +42,13 @@ int llread(int fd, char *buffer) {
   for (int i = 0; i < MAX_TRIES && buffer_length == -1; i++) {
     buffer_length = read_data(fd, sequence_number, buffer);
   }
+  if (buffer_length== DISC_ON_READ) {
+    if (receptor_send_disconnect(fd) != 0) {
+      return -1;
+    }
+    return DISC_ON_READ;
+  }
+  
   if (buffer_length != -1)
     sequence_number = !sequence_number;
   return destuff_buffer(buffer, buffer_length);

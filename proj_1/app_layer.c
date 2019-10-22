@@ -305,19 +305,13 @@ int read_file(int fd) {
 
     // read packets until end
     uint8_t seq_number = 0;
-    bool reached_end = false;
-    while(!reached_end) {
+    while(buffer[0] != CTRL_END && count != (unsigned short) DISC_ON_READ){
 
-        if ((count = (unsigned short) llread(fd,buffer)) <= 0) {
+        if ((count = (unsigned short) llread(fd,buffer)) == (unsigned short) -1) {
             printf("Reached end of input and did not find control end\n");
             return -1;
         }
 
-        // reached final packet
-        if (buffer[0] == CTRL_END) {
-            reached_end = true;
-            break;
-        }
 
         printf("First print\n");
         for (int i = 0; i < count; i++) {
@@ -332,10 +326,14 @@ int read_file(int fd) {
         printf("\n");
 
         // interpret data
-        if (parse_data_packet(buffer, count, new_fd, seq_number++ % UCHAR_MAX) == -1) {
+        if (buffer[0] == CTRL_DATA && parse_data_packet(buffer, count, new_fd, seq_number++ % UCHAR_MAX) == -1) {
             printf("Error parsing data packet\n");
             return -1;
         }
+    }
+    if(count == (unsigned short)DISC_ON_READ){
+        printf("Read a disconnect on read\n");
+        return -1;
     }
     
     printf("Read end control packet\n");
