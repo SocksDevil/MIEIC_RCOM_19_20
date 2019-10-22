@@ -13,9 +13,9 @@
 #include "llinterpretation.h"
 #include "utils.h"
 #include "disconnect_frame.h"
+#include "set_frame.h"
 
 static struct termios oldtio;
-static int send_cnt = 0;
 static int fd;
 static int timeout;
 
@@ -38,28 +38,6 @@ bool is_non_info_frame(unsigned char received_frame) {
 bool is_info_frame(frame_t *frame) {
   return frame->control_field == C_RI_0 ||
          frame->control_field == C_RI_1;
-}
-
-
-void send_set_up_frame() {
-  send_cnt++;
-  printf("Sending message. Attempt %d\n", send_cnt);
-  unsigned char SET[5];
-  SET[0] = FLAG;
-  SET[1] = A;
-  SET[2] = C_SET;
-  SET[3] = SET[1] ^ SET[2];
-  SET[4] = FLAG;
-
-  write(fd, SET, 5);
-
-  // only try to send msg 3 times
-  if (send_cnt == SEND_ATTEMPTS + 1) {
-    printf("Could not send message. Exiting program.\n");
-    exit(1);
-  }
-
-  alarm(timeout);
 }
 
 void check_control_field(frame_t *frame) {
@@ -254,10 +232,11 @@ int emitter_disconnect(int fd) {
 
 int set_connection(link_layer layer) {
   timeout = layer.timeout;
-  set_timeout(timeout);
-  (void) signal(SIGALRM, send_set_up_frame);
-  send_set_up_frame();
-  alarm(timeout);
+  set_timeout(timeout);//todo see what depends on this
+  write_set_frame(fd,timeout,SEND_ATTEMPTS);
+  
+  
+
   frame_t frame = read_control_frame(C_UA);
   if(frame.current_state == STATE_END)
     return 0;  
