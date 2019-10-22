@@ -54,6 +54,7 @@ void write_data_frame(){
 
             unsigned char * curr_frame = (current_sequence_number == 0) ? data_frame0 : data_frame1;
 
+            printf("Write data frame\n");
             for (int i = 0; i < frame_size; i++) {
               printf("%2x ", curr_frame[i]);
             }
@@ -66,7 +67,7 @@ void write_data_frame(){
         printf("Failed to send data frame %d times! Exiting...\n", num_attempts);
         exit(1);
     }
-    
+
 }
 
 void save_last_frame(unsigned char * received_frame, int sequence_number){

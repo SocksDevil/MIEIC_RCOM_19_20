@@ -330,11 +330,12 @@ int read_data(int fd, int sequence_number, char *buffer) {
     // printf("value: %2x, current_state: %d\n", frame.received_frame[frame.current_frame], frame.current_state);
   }
 
-  destuff_buffer(frame.received_frame, frame.current_frame);
 
-  int data_size;
+
+  int data_size = destuff_buffer(frame.received_frame, frame.current_frame);
+
   if (frame.current_state != STATE_ERROR &&
-      (data_size = interpreter(frame.received_frame, buffer)) != -1) {
+      (data_size = interpreter(frame.received_frame, buffer, data_size)) != -1) {
     printf("Received frame!\n");
     send_non_info_frame(fd, sequence_number == 0 ? C_RR_0 : C_RR_1);
     save_last_frame(received_frame, sequence_number);
