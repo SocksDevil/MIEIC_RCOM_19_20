@@ -236,6 +236,8 @@ int parse_data_packet(char * buffer, unsigned short size, int fd, uint8_t seq_nu
         return -1;
     }
 
+    printf("Current sequence_number: %u\n", (uint8_t) buffer[1]);
+
     if ((uint8_t)buffer[1] != seq_number) {
         printf("Wrong sequence number. Got %u, expected %u\n", (uint8_t) buffer[1], seq_number);
         return -1;
@@ -315,7 +317,7 @@ int read_file(int fd, char * filename) {
         }
 
         // interpret data
-        if (buffer[0] == CTRL_DATA && parse_data_packet(buffer, count, new_fd, seq_number++ % UCHAR_MAX) == -1) {
+        if (buffer[0] == CTRL_DATA && parse_data_packet(buffer, count, new_fd, seq_number++ % (UCHAR_MAX + 1)) == -1) {
             printf("Error parsing data packet\n");
             return -1;
         }

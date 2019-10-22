@@ -61,7 +61,7 @@ void write_data_frame(){
         printf("Failed to send data frame %d times! Exiting...\n", num_attempts);
         exit(1);
     }
-    
+
 }
 
 void save_last_frame(unsigned char * received_frame, int sequence_number){
