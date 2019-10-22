@@ -51,7 +51,7 @@ int llread(int fd, char *buffer) {
   
   if (buffer_length != -1)
     sequence_number = !sequence_number;
-  return destuff_buffer(buffer, buffer_length);
+  return buffer_length;
 }
 
 int llclose(int fd, connection_role role) {

@@ -326,6 +326,8 @@ int read_data(int fd, int sequence_number, char *buffer) {
     update_state(&frame);
   }
 
+  destuff_buffer(frame.received_frame, frame.current_frame);
+
   int data_size;
   if (frame.current_state != STATE_ERROR &&
       (data_size = interpreter(frame.received_frame, buffer)) != -1) {
@@ -352,7 +354,6 @@ int read_data(int fd, int sequence_number, char *buffer) {
 }
 
 int write_data(int fd, int sequence_number, char *buffer, int length) {
-  length = stuff_buffer(buffer, length);
   int written_bytes = prepare_data_frame(sequence_number, buffer, length, fd);
   if (written_bytes == -1)
     return -1;

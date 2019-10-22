@@ -234,7 +234,7 @@ int parse_data_packet(char * buffer, unsigned short size, int fd, uint8_t seq_nu
         return -1;
     }
 
-    if (buffer[1] != seq_number) {
+    if ((buffer[1]) != seq_number) {
         printf("Wrong sequence number. Got %u, expected %u\n", buffer[1], seq_number);
         return -1;
     }

@@ -8,20 +8,24 @@
 #include "utils.h"
 #include "constants.h"
 
-int stuff_buffer(char * buffer, int length) {
+int stuff_buffer(unsigned char * buffer, int length) {
     // determine new length
-    int new_length = 0;
-    for (int i = 0; i < length; i++) {
+    int new_length = 5;
+    for (int i = 4; i < length-1; i++) {
         new_length++;
         if (buffer[i] == FLAG || buffer[i] == ESCAPE_CHAR) new_length++;
     }
 
     // create new buffer
-    char * new_buffer = (char*) malloc(new_length);
-    memset(new_buffer, 0, sizeof(char) * new_length);
+    unsigned char * new_buffer = (unsigned char*) malloc(new_length);
+    memset(new_buffer, 0, sizeof(unsigned char) * new_length);
+
+    // copy header and trailing info
+    memcpy(new_buffer, buffer, sizeof(unsigned char) * 4);
+    new_buffer[new_length-1] = buffer[length-1];
 
     // fill new buffer
-    for (int i = 0, ins_pos = 0; i < length; i++) {
+    for (int i = 4, ins_pos = 4; i < length-1; i++) {
         if(buffer[i] == FLAG) {
             new_buffer[ins_pos] = ESCAPE_CHAR;
             new_buffer[ins_pos+1] = FLAG_SUBST;
@@ -43,7 +47,7 @@ int stuff_buffer(char * buffer, int length) {
     return new_length;
 }
 
-int destuff_buffer(char * buffer, int length) {
+int destuff_buffer(unsigned char * buffer, int length) {
     // determine new_length
     int new_length = length;
     for (int i = 0 ; i < length; i++) {
@@ -51,11 +55,15 @@ int destuff_buffer(char * buffer, int length) {
     }
 
     // create new buffer
-    char new_buffer[new_length];
-    memset(new_buffer, 0, sizeof(char) * new_length);
+    unsigned char new_buffer[new_length];
+    memset(new_buffer, 0, sizeof(unsigned char) * new_length);
+
+    // copy header and trailing info
+    memcpy(new_buffer, buffer, sizeof(unsigned char) * 4);
+    new_buffer[new_length-1] = buffer[length-1];
 
     // fill new buffer
-    for (int i = 0, ins_pos = 0; i < length; i++, ins_pos++) {        
+    for (int i = 4, ins_pos = 4; i < length-1; i++, ins_pos++) {        
         if (buffer[i] == ESCAPE_CHAR) {
             if (buffer[i+1] == FLAG_SUBST) {
                 new_buffer[ins_pos] = FLAG;
