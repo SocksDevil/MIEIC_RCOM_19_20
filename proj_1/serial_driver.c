@@ -327,7 +327,6 @@ int read_data(int fd, int sequence_number, char *buffer) {
        frame.current_frame++) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
-    // printf("value: %2x, current_state: %d\n", frame.received_frame[frame.current_frame], frame.current_state);
   }
 
   destuff_buffer(frame.received_frame, frame.current_frame);
@@ -379,12 +378,12 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);
   }
-  printf("%d\n", frame.current_state);
+  
   alarm(0);
   if (frame.current_state != STATE_END) {
     printf("Receiver rejected!\n");
     return -1;
   }
-  printf("Received receiver ready!\n");
+  printf("Received receiver ready!\n\n");
   return written_bytes;
 }

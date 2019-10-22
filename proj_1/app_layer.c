@@ -42,7 +42,7 @@ app_data_packet prepare_data_packet(app_ctrl_field packet_type, uint8_t * buff, 
 
     app_data_packet packet;
     packet.c_field = packet_type;
-    packet.seq_n = seq_number % UCHAR_MAX;
+    packet.seq_n = seq_number % (UCHAR_MAX+1);
     packet.byte_n_low = (uint8_t) buffsize;
     packet.byte_n_high= (uint8_t) (buffsize >> 8);
 
@@ -128,6 +128,8 @@ int send_data_packet(int fd, app_data_packet * packet) {
         printf("Error in llwrite\n");
         return -1;
     }
+
+    printf("Sending packet: sequence number %d\n", packet->seq_n);
 
     free(buffer);
 
@@ -317,6 +319,7 @@ int read_file(int fd, char * filename) {
             printf("Error parsing data packet\n");
             return -1;
         }
+
     }
     if(count == (unsigned short)DISC_ON_READ){
         printf("Read a disconnect on read\n");

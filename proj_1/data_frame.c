@@ -36,8 +36,10 @@ int prepare_data_frame(int sequence_number, char *buffer, int length, int file_d
     data_frame[index++] = FLAG;
     current_sequence_number = sequence_number;
     fd = file_descriptor;
-    frame_size = index;
-    return stuff_buffer(data_frame, frame_size);
+
+    frame_size = stuff_buffer(data_frame, index);
+
+    return frame_size;
   }
   return -1;
 }
@@ -50,14 +52,7 @@ void write_data_frame(){
     if(current_attempt < num_attempts){
         if(fd != -1){
             current_attempt++;
-            printf("Sending data frame attempt %d\n", current_attempt);
-
-            unsigned char * curr_frame = (current_sequence_number == 0) ? data_frame0 : data_frame1;
-
-            for (int i = 0; i < frame_size; i++) {
-              printf("%2x ", curr_frame[i]);
-            }
-            printf("\n\n");
+            printf("Sending data frame: attempt %d\n", current_attempt);
 
             write(fd, current_sequence_number == 0 ? data_frame0 : data_frame1, frame_size);
             alarm(timeout);
