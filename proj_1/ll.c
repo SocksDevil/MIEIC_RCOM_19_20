@@ -55,7 +55,6 @@ int llread(int fd, char *buffer) {
 }
 
 int llclose(int fd, connection_role role) {
-  printf("llclose\n");
   if (fd != -1) {
     switch (role){
       case TRANSMITTER:
