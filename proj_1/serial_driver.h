@@ -27,6 +27,7 @@ struct Frame {
   state_machine current_state;
   int current_frame;
   unsigned char control_field;
+  unsigned char address_field;
   unsigned char *received_frame;
   bool sequence_number;
   control_func control_verification;
