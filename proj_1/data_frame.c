@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static unsigned char data_frame0[MAX_SIZE];
-static unsigned char data_frame1[MAX_SIZE];
+static unsigned char data_frame0[MAX_FRAME_SIZE];
+static unsigned char data_frame1[MAX_FRAME_SIZE];
 static int current_sequence_number = 0;
 static int fd = -1;
 static int frame_size = 0;
@@ -19,7 +19,7 @@ int prepare_data_frame(int sequence_number, char *buffer, int length, int file_d
   unsigned char *data_frame = sequence_number == 0 ? data_frame0 : data_frame1;
   current_attempt = 0;
 
-  if (length + 6 <= MAX_SIZE) {
+  if (length + 6 <= MAX_FRAME_SIZE) {
     int index = 4;
     data_frame[0] = FLAG;
     data_frame[1] = A;

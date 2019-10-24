@@ -13,7 +13,7 @@ int llopen(int port, connection_role role) {
   sprintf(layer.port, "/dev/ttyS%d", port);
   layer.baud_rate = BAUDRATE;
   layer.num_transmissions = 3;
-  layer.timeout = 3;
+  layer.timeout = TIMEOUT_T;
   int fd = open_connection(layer);
   if (fd != -1) {
     switch (role) {

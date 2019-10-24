@@ -37,7 +37,7 @@ typedef enum {
   STATE_DISC_END
 } state_machine;
 
-#define MAX_SIZE 255 //TO-DO - Check actual value
+#define MAX_FRAME_SIZE 200000
 
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define MAX_TRIES 5

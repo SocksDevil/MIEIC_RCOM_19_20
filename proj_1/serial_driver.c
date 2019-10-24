@@ -220,7 +220,7 @@ frame_t read_control_frame(unsigned char control_field) {
     .control_verification = check_control_field};
 
   for (;
-       frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
+       frame.current_frame < MAX_FRAME_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
        frame.current_frame++) {
     read(fd, &received_frame[frame.current_frame], 1);
     alarm(0); // TODO- Rethink how alarm reads could be approached
@@ -307,7 +307,7 @@ int receptor_send_disconnect(int fd){
 }
 
 int read_data(int fd, int sequence_number, char *buffer) {
-  unsigned char received_frame[MAX_SIZE];
+  unsigned char received_frame[MAX_FRAME_SIZE];
 
   frame_t frame = {
     .current_state = STATE_FLAG_I,
@@ -318,7 +318,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
     .control_verification = check_data_frame};
 
   for (;
-       frame.current_frame < MAX_SIZE &&
+       frame.current_frame < MAX_FRAME_SIZE &&
        frame.current_state != STATE_END &&
        frame.current_state != STATE_ERROR &&
        frame.current_state != STATE_WRONG_SEQ_END &&
@@ -362,7 +362,7 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
 
   (void) signal(SIGALRM, write_data_frame);
   write_data_frame();
-  unsigned char received_frame[MAX_SIZE];
+  unsigned char received_frame[MAX_FRAME_SIZE];
 
   frame_t frame = {
     .current_state = STATE_FLAG_I,
@@ -372,7 +372,7 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
     .sequence_number = sequence_number,
     .control_verification = check_data_frame};
   for (;
-        frame.current_frame < MAX_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
+        frame.current_frame < MAX_FRAME_SIZE && frame.current_state != STATE_END && frame.current_state != STATE_ERROR;
         frame.current_frame++) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
     update_state(&frame);

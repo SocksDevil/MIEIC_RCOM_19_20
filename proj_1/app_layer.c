@@ -174,8 +174,8 @@ int send_file(char * filename, int fd) {
 
     // data packets
     int n, seq_number = 0;
-    uint8_t buff[DATA_BYTES];
-    while((n = read(file_fd, buff, DATA_BYTES))) {
+    uint8_t buff[MAX_FRAME_SIZE];
+    while((n = read(file_fd, buff, MAX_FRAME_SIZE))) {
         app_data_packet data_packet = prepare_data_packet(CTRL_DATA, buff, n, seq_number++);
 
         if (send_data_packet(fd, &data_packet) == -1) {
@@ -299,7 +299,7 @@ bool matching_ctrl_packets(ctrl_info start, ctrl_info end) {
 int read_file(int fd, char * filename) {
 
     // TODO check the buffer size
-    char buffer[MAX_FRAME_SIZE];
+    char buffer[MAX_DATA_PACKET_SIZE];
     unsigned short count;
     ctrl_info start_info, end_info;
     unsigned long total_read = 0;
