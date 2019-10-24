@@ -11,10 +11,11 @@ static int fd = -1;
 static int num_attempts = 4;
 static int current_attempt = 0;
 static int timeout = 0;
+static unsigned char address_field = 0;
 
 void write_disconnect() {
   if(current_attempt < num_attempts){
-    send_non_info_frame(fd, C_DISC);
+    send_non_info_frame(fd, C_DISC, address_field);
     alarm(timeout);
     current_attempt++;
   }else{
@@ -24,9 +25,10 @@ void write_disconnect() {
 
 }
 
-void launch_disconnect_alarm(int file_descriptor, int new_timeout) {
+void launch_disconnect_alarm(int file_descriptor, int new_timeout, unsigned char address) {
   timeout = new_timeout;
   fd = file_descriptor;
+  address_field = address;
   signal(SIGALRM, write_disconnect);
   alarm(timeout);
   write_disconnect();
