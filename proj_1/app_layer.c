@@ -119,6 +119,7 @@ int send_data_packet(int fd, app_data_packet * packet) {
     buffer[ins_i++] = packet->seq_n;
     buffer[ins_i++] = packet->byte_n_high;
     buffer[ins_i++] = packet->byte_n_low;
+
     for (int i = 0; i < data_bytes_count; i++) {
         buffer[ins_i++] = packet->data[i];
     }
