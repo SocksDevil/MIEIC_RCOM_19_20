@@ -22,7 +22,7 @@ int prepare_data_frame(int sequence_number, char *buffer, int length, int file_d
   if (length + 6 <= MAX_FRAME_SIZE) {
     int index = 4;
     data_frame[0] = FLAG;
-    data_frame[1] = A;
+    data_frame[1] = EMITTER_A;
     data_frame[2] = sequence_number == 0 ? C_RI_0 : C_RI_1;
     data_frame[3] = data_frame[1] ^ data_frame[2];
     char xor = buffer[0];

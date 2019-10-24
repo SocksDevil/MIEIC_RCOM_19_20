@@ -84,11 +84,11 @@ int destuff_buffer(unsigned char * buffer, int length) {
     return new_length;
 }
 
-void send_non_info_frame(int fd, unsigned char control_field) {
+void send_non_info_frame(int fd, unsigned char control_field, unsigned char address_field) {
   char sending_ack[5];
   sending_ack[0] = FLAG;
   sending_ack[4] = FLAG;
-  sending_ack[1] = A;
+  sending_ack[1] = address_field;
   sending_ack[2] = control_field;
   sending_ack[3] = sending_ack[1] ^ sending_ack[2];
 

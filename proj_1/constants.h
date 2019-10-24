@@ -4,7 +4,8 @@
 #define BAUDRATE B38400
 #define MODEMDEVICE "/dev/ttyS1"
 #define FLAG 0x7E
-#define A 0x03
+#define EMITTER_A 0x03
+#define RECEPTOR_A 0x01
 #define C_SET 0x03
 #define C_DISC 0x0B
 #define C_UA 0x07
