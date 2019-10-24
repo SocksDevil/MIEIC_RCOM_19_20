@@ -265,7 +265,7 @@ int parse_data_packet(char * buffer, unsigned short size, int fd, uint8_t seq_nu
 
     unsigned short length = ((uint8_t) buffer[2] << 8) + (uint8_t) buffer[3];
     if (size != length + 4) {
-        printf("Invalid data packet: unexpected file size. Expected %d, got %d\n", size, length+4);
+        printf("Invalid data packet: unexpected packet size. Expected %d, got %d\n", size, length+4);
         return -1;
     }
 
