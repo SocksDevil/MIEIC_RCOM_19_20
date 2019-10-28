@@ -2,11 +2,19 @@
 
 #include <stdint.h>
 
+#include "constants.h"
+
+typedef struct {
+  connection_role role;
+  char *filename;
+  int port_num;
+} connection_type;
+
 int stuff_buffer(unsigned char *buffer, int length);
 
 int destuff_buffer(unsigned char *buffer, int length);
 
-int parse_arguments(int argc, char *argv[]);
+connection_type parse_arguments(int argc, char *argv[]);
 
 unsigned char byte_size(long num);
 
