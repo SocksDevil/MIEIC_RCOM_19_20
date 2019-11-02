@@ -1,13 +1,13 @@
 
+#include "utils.h"
+
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <string.h>
+#include <time.h>
 #include <unistd.h>
-#include <stdbool.h>
 
-
-#include "utils.h"
 #include "constants.h"
 
 int stuff_buffer(unsigned char * buffer, int length) {
@@ -183,4 +183,10 @@ unsigned char* frame_cpy(unsigned char *dest,unsigned char *src){
     while(*src != FLAG);
     
     return dest;
+}
+
+bool random_failure(int failure_rate){
+  srand(time(NULL));
+  int random = rand();
+  return random < (RAND_MAX * failure_rate);
 }

@@ -25,3 +25,5 @@ int frame_cmp(unsigned char *p1, unsigned char *p2);
 unsigned char *frame_cpy(unsigned char *dest, unsigned char *src);
 
 void send_non_info_frame(int fd, unsigned char control_field, unsigned char address_field);
+
+bool random_failure(int failure_rate);
