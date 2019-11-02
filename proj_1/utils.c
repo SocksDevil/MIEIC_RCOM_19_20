@@ -98,20 +98,20 @@ void send_non_info_frame(int fd, unsigned char control_field, unsigned char addr
 }
 
 bool check_null(int argc, char* argv[]){
-  return (argc < 3) ||
+  return (argc >= 3) &&(
          ((argc == 4) &&
-          (strcmp("0", argv[1]) != 0) &&
-          (strcmp("1", argv[1]) != 0) &&
-          (strcmp("emitter", argv[2]) != 0)) ||
+          ((strcmp("0", argv[1]) == 0) ||
+          (strcmp("1", argv[1]) == 0)) &&
+          (strcmp("emitter", argv[2]) == 0)) ||
          ((argc == 3) &&
-          (strcmp("0", argv[1]) != 0) &&
-          (strcmp("1", argv[1]) != 0) &&
-          (strcmp("emitter", argv[2]) != 0));
+          ((strcmp("0", argv[1]) == 0) ||
+          (strcmp("1", argv[1]) == 0)) &&
+          (strcmp("receiver", argv[2]) == 0)));
 }
 
 connection_type parse_arguments(int argc, char *argv[]) {
-  if (check_null(argc, argv)){
-      printf("Usage: main <serial port number> emitter/receptor (filename)");
+  if (!check_null(argc, argv)){
+      printf("Usage: main <serial port number> emitter/receiver (filename)\n");
       exit(1);
   }
 
