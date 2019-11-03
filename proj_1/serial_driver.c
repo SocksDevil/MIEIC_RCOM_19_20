@@ -173,6 +173,9 @@ void update_state(
       break;
 
     case STATE_BCC:
+      if(random_failure(BCC_ERROR_RATIO)){
+        frame->current_state = STATE_ERROR;
+      }
       update_bcc_state(frame);
       break;
 
@@ -243,7 +246,7 @@ int emitter_disconnect(int fd) {
   //wait for disconnect
   //send UA
 
-  launch_disconnect_alarm(fd, 3, EMITTER_A);
+  launch_disconnect_alarm(fd, TIMEOUT_T, EMITTER_A);
 
   frame_t frame = read_control_frame(C_DISC, RECEPTOR_A);
 
@@ -296,7 +299,7 @@ int receptor_disconnect(int fd) {
 }
 
 int receptor_send_disconnect(int fd) {
-  launch_disconnect_alarm(fd, 3, RECEPTOR_A);
+  launch_disconnect_alarm(fd, TIMEOUT_T, RECEPTOR_A);
   frame_t ua_frame = read_control_frame(C_UA, RECEPTOR_A);
 
   if (ua_frame.current_state != STATE_END) {
@@ -329,6 +332,10 @@ int read_data(int fd, int sequence_number, char *buffer) {
     read(fd, &frame.received_frame[frame.current_frame], 1);
 
     update_state(&frame);    
+  }
+
+  if (random_failure(BCC2_ERROR_RATIO)) {
+    frame.current_state = STATE_ERROR;
   }
 
   int data_size = destuff_buffer(frame.received_frame, frame.current_frame);

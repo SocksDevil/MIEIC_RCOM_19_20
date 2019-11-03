@@ -2,15 +2,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "constants.h"
-#include "utils.h"
-#include "ll.h"
-#include "app_layer.h"
+#include <time.h>
 
+#include "app_layer.h"
+#include "constants.h"
+#include "ll.h"
+#include "utils.h"
+#include "statistics.h"
 
 int main(int argc, char **argv) {
   connection_type conn_type = parse_arguments(argc, argv);
-
+  srand(time(NULL));
+  initialize_statistics();
   int fd = llopen(conn_type.port_num, conn_type.role);
   if (fd == -1) {
     printf("Something went wrong!\n");
@@ -40,6 +43,8 @@ int main(int argc, char **argv) {
     printf("Failed to close serial port!\n");
     exit(1);
   }
+
+  store_final_time();
 
   return 0;
 }

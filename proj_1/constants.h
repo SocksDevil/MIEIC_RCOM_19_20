@@ -22,6 +22,9 @@
 #define FLAG_SUBST 0x5e
 #define ESCAPE_SUBST 0x5d
 
+#define BCC_ERROR_RATIO 0.01
+#define BCC2_ERROR_RATIO 0.01
+
 typedef enum {
   STATE_FLAG_I = 0,
   STATE_A = 1,
@@ -38,7 +41,7 @@ typedef enum {
   STATE_DISC_END
 } state_machine;
 
-#define MAX_SIZE 255 //TO-DO - Check actual value
+#define MAX_SIZE 255 
 
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define MAX_TRIES 5
