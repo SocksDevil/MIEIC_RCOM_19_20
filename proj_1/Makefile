@@ -1,29 +1,23 @@
 C = gcc
 CFLAGS = -Wall -Werror -Wextra
 
-SRC_EM = emitter.c serial_driver.c ll.c utils.c app_layer.c llinterpretation.c data_frame.c disconnect_frame.c
-SRC_REC = receptor.c serial_driver.c ll.c utils.c app_layer.c llinterpretation.c data_frame.c disconnect_frame.c
-OBJ_EM = $(SRC_EM:.c=.o)
-OBJ_REC = $(SRC_REC:.c=.o)
-EXEC1 = receptor
-EXEC2 = emitter
+SRC = main.c serial_driver.c ll.c utils.c app_layer.c llinterpretation.c data_frame.c disconnect_frame.c
+OBJ = $(SRC:.c=.o)
+EXEC = main
 DEPS = $(patsubst %.c,%.d,$(wildcard *.c))
 
 .PHONY: all clean
 
-all: $(EXEC1) $(EXEC2)
+all: $(EXEC)
 
 %.o: %.c
 	$(C) $(CFLAGS) -MMD -c $< -o $@
 
 
-$(EXEC1): $(OBJ_REC)
-	$(C) $(CFLAGS) -o $@ $(OBJ_REC) $(LBLIBS)
-
-$(EXEC2): $(OBJ_EM)
-	$(C) $(CFLAGS) -o $@ $(OBJ_EM) $(LBLIBS)
+$(EXEC): $(OBJ)
+	$(C) $(CFLAGS) -o $@ $(OBJ) $(LBLIBS)
 
 clean:
-	rm -rf $(EXEC1) $(EXEC2) *.o *.d
+	rm -rf $(EXEC) *.o *.d
 
 -include $(DEPS)

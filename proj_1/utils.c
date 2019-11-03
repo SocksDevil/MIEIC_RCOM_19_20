@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdbool.h>
+
 
 #include "utils.h"
 #include "constants.h"
@@ -95,19 +97,36 @@ void send_non_info_frame(int fd, unsigned char control_field, unsigned char addr
   write(fd, sending_ack, 5);
 }
 
-int parse_arguments(int argc, char *argv[]){
-  if ((argc < 3) ||
-      ((strcmp("0", argv[1]) != 0) &&
-       (strcmp("1", argv[1]) != 0))) {
-    printf("Usage:\tnserial SerialPort\n\tex: nserial 1\n");
-    exit(1);
+bool check_null(int argc, char* argv[]){
+  return (argc >= 3) &&(
+         ((argc == 4) &&
+          ((strcmp("0", argv[1]) == 0) ||
+          (strcmp("1", argv[1]) == 0)) &&
+          (strcmp("emitter", argv[2]) == 0)) ||
+         ((argc == 3) &&
+          ((strcmp("0", argv[1]) == 0) ||
+          (strcmp("1", argv[1]) == 0)) &&
+          (strcmp("receiver", argv[2]) == 0)));
+}
+
+connection_type parse_arguments(int argc, char *argv[]) {
+  if (!check_null(argc, argv)){
+      printf("Usage: main <serial port number> emitter/receiver (filename)\n");
+      exit(1);
   }
+
+  connection_type conn_type = {
+      .role = argc == 3 ? RECEIVER: TRANSMITTER,
+      .filename = argv[3],
+      .port_num = strtol(argv[1], NULL, 10)
+    };
+
 
   /*
     Open serial port device for reading and writing and not as controlling tty
     because we don't want to get killed if linenoise sends CTRL-C.
   */
-  return strtol(argv[1], NULL, 10);
+  return conn_type;
 }
 
 unsigned char byte_size(long num) {
