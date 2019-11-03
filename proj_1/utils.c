@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "constants.h"
@@ -186,7 +185,6 @@ unsigned char* frame_cpy(unsigned char *dest,unsigned char *src){
 }
 
 bool random_failure(int failure_rate){
-  srand(time(NULL));
   int random = rand();
   return random < (RAND_MAX * failure_rate);
 }

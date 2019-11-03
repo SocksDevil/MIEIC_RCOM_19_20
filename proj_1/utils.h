@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "constants.h"
+#include <stdbool.h>
 
 typedef struct {
   connection_role role;
