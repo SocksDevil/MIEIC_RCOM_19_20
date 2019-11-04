@@ -342,7 +342,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
 
   if (frame.current_state == STATE_END &&
       (data_size = interpreter(frame.received_frame, buffer, data_size)) != -1) {
-    send_non_info_frame(fd, sequence_number == 0 ? C_RR_0 : C_RR_1, EMITTER_A);
+    send_non_info_frame(fd, sequence_number != 0 ? C_RR_0 : C_RR_1, EMITTER_A);
     save_last_frame(received_frame, sequence_number);
   }
   else if (frame.current_state == STATE_ERROR) {
@@ -354,7 +354,7 @@ int read_data(int fd, int sequence_number, char *buffer) {
     int opposite_seq_num = (sequence_number ^ 1);
     printf("Wrong sequence number!\n");
     if (is_same_frame(received_frame, opposite_seq_num))
-      send_non_info_frame(fd, opposite_seq_num == 0 ? C_RR_0 : C_RR_1, EMITTER_A);
+      send_non_info_frame(fd, opposite_seq_num != 0 ? C_RR_0 : C_RR_1, EMITTER_A);
     else
       send_non_info_frame(fd, opposite_seq_num == 0 ? C_REJ_0 : C_REJ_1, EMITTER_A);
     return -1;
@@ -378,7 +378,7 @@ int write_data(int fd, int sequence_number, char *buffer, int length) {
     .current_state = STATE_FLAG_I,
     .current_frame = 0,
     .received_frame = received_frame,
-    .control_field = sequence_number == 0 ? C_RR_0 : C_RR_1,
+    .control_field = sequence_number != 0 ? C_RR_0 : C_RR_1,
     .sequence_number = sequence_number,
     .address_field = EMITTER_A,
     .control_verification = check_data_frame};
