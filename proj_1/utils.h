@@ -27,4 +27,4 @@ unsigned char *frame_cpy(unsigned char *dest, unsigned char *src);
 
 void send_non_info_frame(int fd, unsigned char control_field, unsigned char address_field);
 
-bool random_failure(int failure_rate);
+bool random_failure(double failure_rate);

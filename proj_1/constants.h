@@ -22,8 +22,8 @@
 #define FLAG_SUBST 0x5e
 #define ESCAPE_SUBST 0x5d
 
-#define BCC_ERROR_RATIO 0.01
-#define BCC2_ERROR_RATIO 0.01
+#define BCC_ERROR_RATIO 0.25
+#define BCC2_ERROR_RATIO 0.25
 
 typedef enum {
   STATE_FLAG_I = 0,

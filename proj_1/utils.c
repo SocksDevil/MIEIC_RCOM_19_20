@@ -184,7 +184,7 @@ unsigned char* frame_cpy(unsigned char *dest,unsigned char *src){
     return dest;
 }
 
-bool random_failure(int failure_rate){
-  int random = rand();
+bool random_failure(double failure_rate){
+  double random = rand();
   return random < (RAND_MAX * failure_rate);
 }
