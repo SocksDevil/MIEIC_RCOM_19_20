@@ -30,14 +30,14 @@ int main(int argc, char **argv) {
   /*open an TCP socket*/
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("socket()");
-    exit(0);
+    exit(1);
   }
   /*connect to the server*/
   if (connect(sockfd,
               (struct sockaddr *) &server_addr,
               sizeof(server_addr)) < 0) {
     perror("connect()");
-    exit(0);
+    exit(1);
   }
   /*send a string to the server*/
   bytes = write(sockfd, buf, strlen(buf));
