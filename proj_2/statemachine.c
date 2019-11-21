@@ -1,7 +1,10 @@
+#include "statemachine.h"
+
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define MAX_SIZE 2500
+#include <unistd.h>
 
 int recvuntil(int fd, const char * match) {
     char buff[MAX_SIZE];
@@ -10,10 +13,11 @@ int recvuntil(int fd, const char * match) {
     char * ret;
     int read_ret;
     while((ret = strstr(buff, match)) == NULL) {
-        
-        if ((read_ret = read(fd, buff, MAX_SIZE)) == -1) {
-            perror("Read from socket\n");
-            return -1;
+      memset(buff, 0, MAX_SIZE * sizeof(char));
+
+      if ((read_ret = read(fd, buff, MAX_SIZE)) == -1) {
+        perror("Read from socket\n");
+        return -1;
         }
 
         if (read_ret == 0) {
@@ -22,8 +26,10 @@ int recvuntil(int fd, const char * match) {
         }
 
         // Print string read from socket
-        printf("%s\n", buff);
+        printf("%s", buff);
     }
+
+    printf("\n");
 
     return 0;
 }

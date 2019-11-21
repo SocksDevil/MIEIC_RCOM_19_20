@@ -9,7 +9,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+
+#define MAX_SIZE 2500
 #include "hostname.h"
+#include "statemachine.h"
 #define SERVER_PORT 21
 
 int main(int argc, char *argv[]) {
@@ -23,7 +26,7 @@ int main(int argc, char *argv[]) {
   struct sockaddr_in server_addr;
   bzero((char *) &server_addr, sizeof(server_addr));
   server_addr.sin_family = AF_INET;
-  // server_addr.sin_addr.s_addr = inet_addr(get_ip(argv[1])); /*32 bit Internet address network byte ordered*/
+  server_addr.sin_addr.s_addr = inet_addr(get_ip(host)); /*32 bit Internet address network byte ordered*/
   server_addr.sin_port = htons(SERVER_PORT);
 
   // printf("Server ip %s\n", get_ip(argv[1]));
@@ -43,11 +46,20 @@ int main(int argc, char *argv[]) {
     perror("connect()");
     exit(1);
   }
-  char buf[] = "Mensagem de teste na travessia da pilha TCP/IP\n";
+  char buf[MAX_SIZE];
+  sprintf(buf, "user %s\r\n", user);
 
+  recvuntil(socketfd, "Name");
+
+  printf("Meias\n");
   int bytes = write(socketfd, buf, strlen(buf));
 
-  printf("Written %d bytes", bytes);
+  printf("Written %s\n", buf);
+  printf("Written %d bytes\n", bytes);
+
+  recvuntil(socketfd, "Name");
+
+  
   close(socketfd);
   return 0;
 }
