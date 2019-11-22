@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
   }
   char host[MAX_URL_SIZE], url_path[MAX_URL_SIZE], user[MAX_URL_SIZE], password[MAX_URL_SIZE];
   parse_arguments(argv[1], host, url_path, user, password);
+  printf("Host: %s, url path: %s, user %s, password: %s\n", host, url_path, user, password);
   /*server address handling*/
   struct sockaddr_in server_addr;
   bzero((char *) &server_addr, sizeof(server_addr));

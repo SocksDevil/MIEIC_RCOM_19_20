@@ -4,7 +4,8 @@
 
 typedef enum{
     NO_USERNAME,
-    USERNAME,
+    USERNAME_ONLY,
+    USERNAME_AND_PW,
     ERROR
 } url_type;
 
