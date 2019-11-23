@@ -9,56 +9,47 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
-#define MAX_SIZE 2500
 #include "hostname.h"
 #include "statemachine.h"
+
 #define SERVER_PORT 21
+#define MAX_SIZE 2500
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "usage: download address\n");
     exit(1);
   }
-  char host[MAX_URL_SIZE], url_path[MAX_URL_SIZE], user[MAX_URL_SIZE], password[MAX_URL_SIZE];
-  parse_arguments(argv[1], host, url_path, user, password);
-  printf("Host: %s, url path: %s, user %s, password: %s\n", host, url_path, user, password);
-  /*server address handling*/
+
+  /* Parse provided url */
+  url_info_t url_info;
+  parse_arguments(argv[1], &url_info);
+  printf("Host: %s, url path: %s, user: %s, password: %s\n", url_info.host, url_info.url_path, url_info.user, url_info.password);
+
+  /* server address handling*/
   struct sockaddr_in server_addr;
   bzero((char *) &server_addr, sizeof(server_addr));
   server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr = inet_addr(get_ip(host)); /*32 bit Internet address network byte ordered*/
+  server_addr.sin_addr.s_addr = inet_addr(get_ip(url_info.host)); /*32 bit Internet address network byte ordered*/
   server_addr.sin_port = htons(SERVER_PORT);
 
-  // printf("Server ip %s\n", get_ip(argv[1]));
-
-
-
   int socketfd; 
-  /*open an TCP socket*/
+  /* open an TCP socket*/
   if ((socketfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("socket()");
     exit(1);
   }
-  /*connect to the server*/
-  if (connect(socketfd,
-              (struct sockaddr *) &server_addr,
-              sizeof(server_addr)) < 0) {
+
+  /* connect to the server*/
+  if (connect(socketfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
     perror("connect()");
     exit(1);
   }
-  char buf[MAX_SIZE];
-  sprintf(buf, "user %s\r\n", user);
 
-  recvuntil(socketfd, "Name");
 
-  printf("Meias\n");
-  int bytes = write(socketfd, buf, strlen(buf));
+  ftp_login(socketfd, url_info);
 
-  printf("Written %s\n", buf);
-  printf("Written %d bytes\n", bytes);
-
-  recvuntil(socketfd, "Name");
+  recvuntil(socketfd, "oi");
 
   
   close(socketfd);
