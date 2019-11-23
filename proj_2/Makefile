@@ -1,7 +1,7 @@
 C = gcc
 CFLAGS = -Wall -Werror -Wextra
 
-SRC = download.c hostname.c statemachine.c
+SRC = download.c hostname.c connection.c
 OBJ = $(SRC:.c=.o)
 EXEC = download
 DEPS = $(patsubst %.c,%.d,$(wildcard *.c))

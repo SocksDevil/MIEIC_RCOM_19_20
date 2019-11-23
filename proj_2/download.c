@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "hostname.h"
-#include "statemachine.h"
+#include "connection.h"
 
 #define SERVER_PORT 21
 #define MAX_SIZE 2500
@@ -47,11 +47,11 @@ int main(int argc, char *argv[]) {
   }
 
 
+  recvuntil(socketfd, TCP_READY);
   ftp_login(socketfd, url_info);
 
-  recvuntil(socketfd, "oi");
-
   
+  ftp_disconnect(socketfd);
   close(socketfd);
   return 0;
 }
