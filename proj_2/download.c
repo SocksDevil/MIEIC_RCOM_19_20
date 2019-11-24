@@ -46,12 +46,20 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-
+  /* Read welcome msg */
   recvuntil(socketfd, TCP_READY);
+
+  /* Client login on the server */
   ftp_login(socketfd, url_info);
 
+  /* Activate passive mode */
+  pasv_info_t pasv_info;
+  ftp_passive_mode(socketfd, &pasv_info);  
   
+  /* Client disconnect */
   ftp_disconnect(socketfd);
+
+  
   close(socketfd);
   return 0;
 }

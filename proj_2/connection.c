@@ -81,6 +81,57 @@ int ftp_login(int socketfd, url_info_t url_info) {
     return 0;
 }
 
+/*
+Info like:
+227 Entering Passive Mode (193,137,29,15,233,220). 
+*/
+int parse_pasv_return(char * buff, pasv_info_t * pasv_info) {
+    
+    //char ip1[4], ip2[4], ip3[4], ip4[4];
+    int ip1, ip2, ip3, ip4, portHigh, portLow;
+    if (sscanf(buff, "%*99[^(](%4d,%4d,%4d,%4d,%10d,%10d).", &ip1, &ip2, &ip3, &ip4, &portHigh, &portLow) != 6) {
+        printf("parse pasv sscanf did not match 6 values\n");
+        return -1;
+    }
+
+    sprintf(pasv_info->ip, "%d.%d.%d.%d", ip1, ip2, ip3, ip4);
+    pasv_info->port = (portHigh << 8)  + portLow;
+
+    return 0;
+}
+
+int ftp_passive_mode(int socketfd, pasv_info_t * pasv_info) {
+
+    char buff[MAX_SIZE];
+
+    /* Write pasv command */
+    sprintf(buff, "pasv\r\n");
+    printf("> %s", buff);
+    if (write(socketfd, buff, strlen(buff)) == -1) {
+        perror("write user");
+        return -1;
+    }
+
+    /* Read pasv command return */
+    memset(buff, 0, MAX_SIZE*sizeof(char));
+    if (read(socketfd, buff, MAX_SIZE) == -1) {
+        perror("read pasv return");
+        return -1;
+    }
+
+    if (strstr(buff, TCP_PASV) == NULL) {
+        printf("wrong pasv return\n");
+        return -1;
+    }
+    printf("%s", buff);
+
+    parse_pasv_return(buff, pasv_info); 
+
+    return 0;
+}
+
+
+
 int ftp_disconnect(int socketfd) {
     char buf[MAX_SIZE];
     sprintf(buf, "quit\r\n");
