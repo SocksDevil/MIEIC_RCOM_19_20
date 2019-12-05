@@ -144,3 +144,25 @@ int ftp_disconnect(int socketfd) {
 
     return 0;
 }
+
+int ftp_request_file_read(int socketfd, char * url_path) {
+    char buf[MAX_SIZE];
+    sprintf(buf, "retr %s\r\n", url_path);
+    printf("> %s", buf);
+    if (write(socketfd, buf, strlen(buf)) == -1) {
+        perror("write user");
+        return -1;
+    }
+//    recvuntil(socketfd, TCP_CLOSE);
+   // recvall(socketfd);
+    
+    char buff[MAX_SIZE];
+    memset(buff, 0, MAX_SIZE*sizeof(char));
+    
+    recv(socketfd, buff, MAX_SIZE, MSG_PEEK);
+
+    printf("buff: %s\n", buff);
+    
+    
+    return 0;
+}

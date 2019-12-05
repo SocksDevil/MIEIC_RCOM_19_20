@@ -9,6 +9,7 @@
 #define TCP_LOGIN_SUCCESS "230"
 #define TCP_PASV "227"
 #define TCP_CLOSE "221"
+#define TCP_FAILED_OPEN_FILE "550"
 
 typedef struct pasv_info{
     int port;
@@ -26,3 +27,5 @@ int ftp_login(int socketfd, url_info_t url_info);
 int ftp_passive_mode(int socketfd, pasv_info_t * pasv_info);
 
 int ftp_disconnect(int socketfd);
+
+int ftp_request_file_read(int socketfd, char * url_path);
