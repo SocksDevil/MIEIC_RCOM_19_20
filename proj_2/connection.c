@@ -1,5 +1,9 @@
 #include "connection.h"
 
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +11,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 
 int recvuntil(int fd, const char * match) {
     char buff[MAX_SIZE];
@@ -52,6 +57,11 @@ int recvall(int fd) {
     // Verify if exited normally
     if (errno == EAGAIN || errno == EWOULDBLOCK) return 0;
     return -1;
+}
+
+int recvline(int fd, char * buff) {
+    memset(buff, 0, MAX_SIZE*sizeof(char));
+    return read(fd, buff, MAX_SIZE);
 }
 
 int ftp_login(int socketfd, url_info_t url_info) {
@@ -113,17 +123,17 @@ int ftp_passive_mode(int socketfd, pasv_info_t * pasv_info) {
     }
 
     /* Read pasv command return */
-    memset(buff, 0, MAX_SIZE*sizeof(char));
-    if (read(socketfd, buff, MAX_SIZE) == -1) {
+    if (recvline(socketfd, buff) == -1) {
         perror("read pasv return");
         return -1;
     }
+
+    printf("%s", buff);
 
     if (strstr(buff, TCP_PASV) == NULL) {
         printf("wrong pasv return\n");
         return -1;
     }
-    printf("%s", buff);
 
     parse_pasv_return(buff, pasv_info); 
 
@@ -153,16 +163,41 @@ int ftp_request_file_read(int socketfd, char * url_path) {
         perror("write user");
         return -1;
     }
-//    recvuntil(socketfd, TCP_CLOSE);
-   // recvall(socketfd);
-    
-    char buff[MAX_SIZE];
-    memset(buff, 0, MAX_SIZE*sizeof(char));
-    
-    recv(socketfd, buff, MAX_SIZE, MSG_PEEK);
 
-    printf("buff: %s\n", buff);
-    
-    
+    /* Read retr command return */
+    if (recvline(socketfd, buf) == -1) {
+        perror("read retr return");
+        return -1;
+    }
+
+    printf("%s", buf);
+
+    if (strstr(buf, TCP_FILE_STATUS_OK) == NULL) {
+        return -1;
+    }
+
     return 0;
+}
+
+int ftp_open_connection(char * ip, int port) {
+    /* server address handling*/
+    struct sockaddr_in server_addr;
+    bzero((char *) &server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = inet_addr(ip); /*32 bit Internet address network byte ordered*/
+    server_addr.sin_port = htons(port);
+
+    int socketfd;
+    if((socketfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket()");
+        return -1;
+    }
+
+    /* connect to the server*/
+    if (connect(socketfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+        perror("connect()");
+        return -1;
+    }
+
+    return socketfd;
 }

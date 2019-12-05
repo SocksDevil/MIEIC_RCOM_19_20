@@ -17,6 +17,9 @@
 
 int open_control_connection(url_info_t url_info, pasv_info_t * pasv_info);
 int open_data_connection(pasv_info_t pasv_info);
+int close_connections();
+
+int control_fd, data_fd;
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -29,79 +32,45 @@ int main(int argc, char *argv[]) {
   parse_arguments(argv[1], &url_info);
   printf("Host: %s, url path: %s, user: %s, password: %s\n", url_info.host, url_info.url_path, url_info.user, url_info.password);
 
-  pasv_info_t pasv_info;
-  int control_fd = open_control_connection(url_info, &pasv_info);
-  if (control_fd == -1) {
+  /* Open control connection */
+  if ((control_fd = ftp_open_connection(get_ip(url_info.host), SERVER_PORT)) == -1) {
     printf("Error opening control connection\n");
     return -1;
   }
 
-  int data_fd = open_data_connection(pasv_info);
-  if (data_fd == -1) {
+  /* Read welcome msg */
+  recvuntil(control_fd, TCP_READY);
+
+  /* Client login on the server */
+  ftp_login(control_fd, url_info);
+
+  /* Activate passive mode */
+  pasv_info_t pasv_info;
+  ftp_passive_mode(control_fd, &pasv_info);
+
+  /* Open data connection */
+  if ((data_fd = ftp_open_connection(pasv_info.ip, pasv_info.port)) == -1) {
     printf("Error opening data connection\n");
     return -1;
   }
 
-  ftp_request_file_read(control_fd, url_info.url_path);
+  /* Request recv */
+  if (ftp_request_file_read(control_fd, url_info.url_path) == -1) {
+    close_connections();
+    return -1;
+  }
 
   
-  
-  /* Client disconnect */
-  ftp_disconnect(control_fd);
-  ftp_disconnect(data_fd);
-  
-  close(control_fd);
-  close(data_fd);
+  close_connections();
   return 0;
 }
 
-int open_control_connection(url_info_t url_info, pasv_info_t * pasv_info) {
 
-  /* server address handling*/
-  struct sockaddr_in server_addr;
-  bzero((char *) &server_addr, sizeof(server_addr));
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr = inet_addr(get_ip(url_info.host)); /*32 bit Internet address network byte ordered*/
-  server_addr.sin_port = htons(SERVER_PORT);
+int close_connections() {
+  ftp_disconnect(control_fd);
+  
+  close(control_fd);
+  close(data_fd);
 
-  int socketfd; 
-  /* open an TCP socket*/
-  if ((socketfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("socket()");
-    return -1;
-  }
-
-  /* connect to the server*/
-  if (connect(socketfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
-    perror("connect()");
-    return -1;
-  }
-
-  /* Read welcome msg */
-  recvuntil(socketfd, TCP_READY);
-
-  /* Client login on the server */
-  ftp_login(socketfd, url_info);
-
-  /* Activate passive mode */
-  ftp_passive_mode(socketfd, pasv_info);
-
-  return socketfd;
-}
-
-int open_data_connection(pasv_info_t pasv_info) {
-  /* server address handling*/
-  struct sockaddr_in server_addr;
-  bzero((char *) &server_addr, sizeof(server_addr));
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr = inet_addr(pasv_info.ip); /*32 bit Internet address network byte ordered*/
-  server_addr.sin_port = htons(pasv_info.port);
-
-  int socketfd;
-  if((socketfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("socked()");
-    return -1;
-  }
-
-  return socketfd;
+  return 0;
 }
