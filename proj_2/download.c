@@ -42,11 +42,11 @@ int main(int argc, char *argv[]) {
   recvuntil(control_fd, TCP_READY);
 
   /* Client login on the server */
-  ftp_login(control_fd, url_info);
+  if (ftp_login(control_fd, url_info) == -1) return -1;
 
   /* Activate passive mode */
   pasv_info_t pasv_info;
-  ftp_passive_mode(control_fd, &pasv_info);
+  if (ftp_passive_mode(control_fd, &pasv_info) == -1) return -1;
 
   /* Open data connection */
   if ((data_fd = ftp_open_connection(pasv_info.ip, pasv_info.port)) == -1) {
@@ -55,23 +55,15 @@ int main(int argc, char *argv[]) {
   }
 
   /* Request recv */
-  if (ftp_request_file_read(control_fd, url_info.url_path) == -1) {
-    close_connections();
-    return -1;
-  }
+  if (ftp_request_file_read(control_fd, url_info.url_path) == -1) return -1;
 
-  ftp_read_file(data_fd, url_info.url_path);
+  /* Read file*/
+  if (ftp_read_file(data_fd, url_info.url_path) == -1) return -1;
   
-  close_connections();
-  return 0;
-}
 
-
-int close_connections() {
   ftp_disconnect(control_fd);
   
   close(control_fd);
   close(data_fd);
-
   return 0;
 }

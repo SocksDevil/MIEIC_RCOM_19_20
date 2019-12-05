@@ -10,7 +10,9 @@
 #define TCP_PASV "227"
 #define TCP_CLOSE "221"
 #define TCP_FILE_STATUS_OK "150"
+#define TCP_CONNECTION_ALREADY_OPEN "125"
 #define TCP_FAILED_OPEN_FILE "550"
+#define TCP_TRANSFER_COMPLETE "226"
 
 typedef struct pasv_info{
     int port;

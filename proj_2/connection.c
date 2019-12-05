@@ -62,7 +62,16 @@ int recvall(int fd) {
 
 int recvline(int fd, char * buff) {
     memset(buff, 0, MAX_SIZE*sizeof(char));
-    return read(fd, buff, MAX_SIZE);
+    int read_ret = read(fd, buff, MAX_SIZE);
+
+    if (read_ret == -1) {
+        perror("read ret");
+        return -1;
+    }
+
+    printf("%s", buff);
+
+    return read_ret;
 }
 
 int ftp_login(int socketfd, url_info_t url_info) {
@@ -77,8 +86,17 @@ int ftp_login(int socketfd, url_info_t url_info) {
         return -1;
     }
 
+    /* Read user command return */
+    if (recvline(socketfd, buf) == -1) {
+        perror("read user return");
+        return -1;
+    }
+    if (strstr(buf, TCP_NEED_PWD) == NULL) {
+        printf("error in user command\n");
+        return -1;
+    }
+
     /* Password */
-    recvuntil(socketfd, TCP_NEED_PWD);
     sprintf(buf, "pass %s\r\n", url_info.password);
     printf("> %s", buf);
     if (write(socketfd, buf, strlen(buf)) == -1) {
@@ -86,8 +104,15 @@ int ftp_login(int socketfd, url_info_t url_info) {
         return -1;
     }
 
-    /* Wait for login */
-    recvuntil(socketfd, TCP_LOGIN_SUCCESS);
+    /* Read pwd command return */
+    if (recvline(socketfd, buf) == -1) {
+        perror("read pwd return");
+        return -1;
+    }
+    if (strstr(buf, TCP_LOGIN_SUCCESS) == NULL) {
+        printf("could not login\n");
+        return -1;
+    }
 
     return 0;
 }
@@ -129,8 +154,6 @@ int ftp_passive_mode(int socketfd, pasv_info_t * pasv_info) {
         return -1;
     }
 
-    printf("%s", buff);
-
     if (strstr(buff, TCP_PASV) == NULL) {
         printf("wrong pasv return\n");
         return -1;
@@ -140,7 +163,6 @@ int ftp_passive_mode(int socketfd, pasv_info_t * pasv_info) {
 
     return 0;
 }
-
 
 
 int ftp_disconnect(int socketfd) {
@@ -171,11 +193,10 @@ int ftp_request_file_read(int socketfd, char * url_path) {
         return -1;
     }
 
-    printf("%s", buf);
+    char * status_ok = strstr(buf, TCP_FILE_STATUS_OK);
+    char * already_open = strstr(buf, TCP_CONNECTION_ALREADY_OPEN);
 
-    if (strstr(buf, TCP_FILE_STATUS_OK) == NULL) {
-        return -1;
-    }
+    if (status_ok == NULL && already_open == NULL) return -1;
 
     return 0;
 }
