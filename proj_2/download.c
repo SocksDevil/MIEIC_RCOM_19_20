@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  ftp_read_file(data_fd, url_info.url_path);
   
   close_connections();
   return 0;

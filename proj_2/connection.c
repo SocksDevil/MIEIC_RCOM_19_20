@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <fcntl.h>
 
 int recvuntil(int fd, const char * match) {
     char buff[MAX_SIZE];
@@ -200,4 +201,37 @@ int ftp_open_connection(char * ip, int port) {
     }
 
     return socketfd;
+}
+
+int ftp_read_file(int socketfd, char * filepath) {
+
+    char * filename = strrchr(filepath, '/');
+    if (filename == NULL) filename = filepath;
+    else filename = &(filename[1]);
+
+    int newfd;
+    if ((newfd = open(filename, O_WRONLY | O_CREAT, 0660)) == -1) {
+        perror("open newfd");
+        return -1;
+    }
+
+    char buff[MAX_SIZE];
+    memset(buff, 0, MAX_SIZE * sizeof(char));
+
+    int read_ret;
+    while((read_ret = read(socketfd, buff, MAX_SIZE)) != 0) {
+        if (read_ret == -1) {
+            perror("ftp read file");
+            return-1;
+        }
+
+        write(newfd, buff, read_ret);
+    }
+
+    if (close(newfd) == -1) {
+        perror("close newfd");
+        return -1;
+    }
+
+    return 0;
 }

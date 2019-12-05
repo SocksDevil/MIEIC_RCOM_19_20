@@ -32,3 +32,5 @@ int ftp_disconnect(int socketfd);
 int ftp_request_file_read(int socketfd, char * url_path);
 
 int ftp_open_connection(char * ip, int port);
+
+int ftp_read_file(int socketfd, char * filepath);
