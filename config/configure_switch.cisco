@@ -1,0 +1,9 @@
+configure terminal
+vlan 30
+interface fastethernet 0/1
+switchport mode access
+switchport access vlan 30
+interface fastethernet 0/4
+switchport mode access
+switchport access vlan 30
+end
